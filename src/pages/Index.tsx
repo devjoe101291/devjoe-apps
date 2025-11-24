@@ -1,27 +1,39 @@
+import { useState, useEffect } from "react";
 import { AppCard } from "@/components/AppCard";
 import { Button } from "@/components/ui/button";
-import { Code2, Sparkles } from "lucide-react";
+import { Code2, Sparkles, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
+import { supabase } from "@/integrations/supabase/client";
+
+interface App {
+  id: string;
+  name: string;
+  description: string;
+  platform: "android" | "windows" | "web";
+  icon_url?: string;
+  file_url?: string;
+}
 
 const Index = () => {
-  // Sample apps - replace with your actual apps
-  const apps = [
-    {
-      name: "Sample Android App",
-      description: "A powerful Android application with modern features and intuitive design.",
-      platform: "android" as const,
-    },
-    {
-      name: "Sample Windows Tool",
-      description: "Desktop application built for Windows with advanced functionality.",
-      platform: "windows" as const,
-    },
-    {
-      name: "Sample Web Platform",
-      description: "Full-featured web application accessible from any browser.",
-      platform: "web" as const,
-    },
-  ];
+  const navigate = useNavigate();
+  const [apps, setApps] = useState<App[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchApps();
+  }, []);
+
+  const fetchApps = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("apps")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    setApps((data as App[]) || []);
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,10 +77,11 @@ const Index = () => {
           <div className="flex items-center justify-center gap-4 pt-4">
             <Button 
               size="lg" 
+              onClick={() => navigate("/auth")}
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-[0_0_20px_hsl(193_95%_55%_/_0.3)] hover:shadow-[0_0_30px_hsl(193_95%_55%_/_0.5)] transition-all"
             >
-              <Code2 className="w-5 h-5 mr-2" />
-              Explore Apps
+              <Lock className="w-5 h-5 mr-2" />
+              Admin Login
             </Button>
           </div>
         </div>
@@ -91,13 +104,21 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            {apps.map((app, index) => (
-              <div key={index} style={{ animationDelay: `${0.3 + index * 0.1}s` }} className="animate-fade-in">
-                <AppCard {...app} />
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center text-muted-foreground">Loading apps...</div>
+          ) : apps.length === 0 ? (
+            <div className="text-center text-muted-foreground">
+              No apps yet. Login to add your first app!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              {apps.map((app, index) => (
+                <div key={app.id} style={{ animationDelay: `${0.3 + index * 0.1}s` }} className="animate-fade-in">
+                  <AppCard {...app} iconUrl={app.icon_url} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
