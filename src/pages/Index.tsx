@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { AppCard } from "@/components/AppCard";
+import { VideoCard } from "@/components/VideoCard";
 import { Button } from "@/components/ui/button";
-import { Code2, Sparkles, Lock, Download } from "lucide-react";
+import { Code2, Sparkles, Lock, Download, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,14 +18,25 @@ interface App {
   download_count?: number;
 }
 
+interface Video {
+  id: string;
+  title: string;
+  description: string;
+  video_url: string;
+  thumbnail_url?: string;
+  view_count?: number;
+}
+
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [apps, setApps] = useState<App[]>([]);
+  const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchApps();
+    fetchVideos();
   }, []);
 
   const fetchApps = async () => {
@@ -36,6 +48,26 @@ const Index = () => {
 
     setApps((data as App[]) || []);
     setLoading(false);
+  };
+
+  const fetchVideos = async () => {
+    const { data } = await supabase
+      .from("videos" as any)
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    setVideos((data as any) || []);
+  };
+
+  const handleVideoView = async (videoId: string) => {
+    const video = videos.find(v => v.id === videoId);
+    if (video) {
+      await supabase
+        .from('videos' as any)
+        .update({ view_count: (video.view_count || 0) + 1 })
+        .eq('id', videoId);
+      fetchVideos();
+    }
   };
 
   const handleDownload = async (app: App) => {
@@ -198,10 +230,50 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Video Gallery Section */}
+      <section className="py-12 sm:py-24 px-4 sm:px-6 bg-secondary/20">
+        <div className="container mx-auto">
+          <div className="text-center space-y-2 sm:space-y-4 mb-8 sm:mb-16 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs sm:text-sm font-medium mb-2 sm:mb-4 mx-auto">
+              <Video className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Inspirational Content</span>
+            </div>
+            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold px-2">
+              <span className="bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                Video Gallery
+              </span>
+            </h2>
+            <p className="text-muted-foreground text-base sm:text-lg md:text-xl max-w-2xl mx-auto px-2">
+              Uplifting messages and teachings to strengthen your faith
+            </p>
+          </div>
+
+          {videos.length === 0 ? (
+            <div className="text-center text-muted-foreground">
+              No videos yet. Stay tuned for inspiring content!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-fade-in">
+              {videos.map((video, index) => (
+                <div key={video.id} style={{ animationDelay: `${0.2 + index * 0.1}s` }} className="animate-fade-in">
+                  <VideoCard 
+                    {...video} 
+                    videoUrl={video.video_url}
+                    thumbnailUrl={video.thumbnail_url}
+                    viewCount={video.view_count}
+                    onView={() => handleVideoView(video.id)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-border/50 py-6 sm:py-8 px-4 sm:px-6 mt-12 sm:mt-24">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p className="text-xs sm:text-sm">© 2024 Dev Joe Solutions. All rights reserved.</p>
+          <p className="text-xs sm:text-sm">© 2025 Dev Joe Solutions. All rights reserved.</p>
         </div>
       </footer>
     </div>
