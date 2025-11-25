@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { LogOut, Plus, Trash2, Upload, Home, Edit } from "lucide-react";
+import { LogOut, Plus, Trash2, Upload, Home, Edit, Video, Play } from "lucide-react";
 import { AppCard } from "@/components/AppCard";
 import { uploadFileChunked, uploadImage, formatFileSize, validateFile } from "@/lib/uploadUtils";
 import { Progress } from "@/components/ui/progress";
@@ -23,6 +23,15 @@ interface App {
   icon_url?: string;
   file_url?: string;
   download_count?: number;
+}
+
+interface Video {
+  id: string;
+  title: string;
+  description: string;
+  video_url: string;
+  thumbnail_url?: string;
+  view_count?: number;
 }
 
 const Admin = () => {
@@ -45,6 +54,14 @@ const Admin = () => {
   const [editAppFile, setEditAppFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Video management states
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [videoTitle, setVideoTitle] = useState("");
+  const [videoDescription, setVideoDescription] = useState("");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState<"apps" | "videos">("apps");
 
   useEffect(() => {
     checkAuth();
@@ -86,8 +103,9 @@ const Admin = () => {
       return;
     }
 
-    // User is admin, fetch apps
+    // User is admin, fetch apps and videos
     fetchApps();
+    fetchVideos();
   };
 
   const fetchApps = async () => {
@@ -104,6 +122,23 @@ const Admin = () => {
       });
     } else {
       setApps((data as App[]) || []);
+    }
+  };
+
+  const fetchVideos = async () => {
+    const { data, error } = await supabase
+      .from("videos" as any)
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast({
+        title: "Error fetching videos",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setVideos((data as any) || []);
     }
   };
 
@@ -316,6 +351,128 @@ const Admin = () => {
     setIsUploading(false);
   };
 
+  const handleVideoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      let thumbnailUrl = null;
+      let videoUrl = null;
+
+      // Validate files
+      if (thumbnailFile) {
+        const validation = validateFile(thumbnailFile, 10 * 1024 * 1024, [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+        ]);
+        if (!validation.valid) {
+          throw new Error(validation.error);
+        }
+      }
+
+      if (!videoFile) {
+        throw new Error("Please select a video file to upload.");
+      }
+
+      const validation = validateFile(videoFile, 500 * 1024 * 1024, [
+        "video/mp4",
+        "video/webm",
+        "video/quicktime",
+      ]);
+      if (!validation.valid) {
+        throw new Error(validation.error);
+      }
+
+      // Upload thumbnail
+      if (thumbnailFile) {
+        toast({
+          title: "Uploading thumbnail...",
+          description: `Size: ${formatFileSize(thumbnailFile.size)}`,
+        });
+        thumbnailUrl = await uploadImage(
+          thumbnailFile,
+          "video-thumbnails",
+          "thumbnails",
+          (progress) => {
+            setUploadProgress(Math.round(progress.percentage / 4)); // 0-25%
+          }
+        );
+      }
+
+      // Upload video with chunked upload
+      toast({
+        title: "Uploading video...",
+        description: `Size: ${formatFileSize(videoFile.size)}. Using optimized chunked upload for faster transfer.`,
+      });
+      videoUrl = await uploadFileChunked(
+        videoFile,
+        "videos",
+        "uploads",
+        (progress) => {
+          const baseProgress = thumbnailFile ? 25 : 0;
+          const videoProgress = thumbnailFile
+            ? (progress.percentage * 75) / 100
+            : progress.percentage;
+          setUploadProgress(Math.round(baseProgress + videoProgress));
+        }
+      );
+
+      setUploadProgress(100);
+
+      const { error } = await supabase.from("videos" as any).insert({
+        title: videoTitle,
+        description: videoDescription,
+        video_url: videoUrl,
+        thumbnail_url: thumbnailUrl,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "Video added successfully.",
+      });
+
+      setVideoTitle("");
+      setVideoDescription("");
+      setVideoFile(null);
+      setThumbnailFile(null);
+      setUploadProgress(0);
+      fetchVideos();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add video. Please try again.",
+        variant: "destructive",
+      });
+      setUploadProgress(0);
+    }
+
+    setLoading(false);
+    setIsUploading(false);
+  };
+
+  const handleVideoDelete = async (id: string) => {
+    const { error } = await supabase.from("videos" as any).delete().eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Error deleting video",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Video deleted successfully.",
+      });
+      fetchVideos();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/50 bg-card/50 backdrop-blur sticky top-0 z-10">
@@ -338,7 +495,30 @@ const Admin = () => {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
-        <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-br from-card to-card/50 border-border/50">
+        {/* Tabs */}
+        <div className="flex gap-2 border-b border-border/50">
+          <Button
+            variant={activeTab === "apps" ? "default" : "ghost"}
+            onClick={() => setActiveTab("apps")}
+            className="gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            Apps
+          </Button>
+          <Button
+            variant={activeTab === "videos" ? "default" : "ghost"}
+            onClick={() => setActiveTab("videos")}
+            className="gap-2"
+          >
+            <Video className="w-4 h-4" />
+            Videos
+          </Button>
+        </div>
+
+        {/* Apps Section */}
+        {activeTab === "apps" && (
+          <>
+            <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-br from-card to-card/50 border-border/50">
           <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Add New App</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -455,6 +635,124 @@ const Admin = () => {
             ))}
           </div>
         </div>
+          </>
+        )}
+
+        {/* Videos Section */}
+        {activeTab === "videos" && (
+          <>
+            <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-br from-card to-card/50 border-border/50">
+              <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Add New Video</h2>
+              <form onSubmit={handleVideoSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="video-title">Video Title</Label>
+                    <Input
+                      id="video-title"
+                      value={videoTitle}
+                      onChange={(e) => setVideoTitle(e.target.value)}
+                      required
+                      placeholder="Inspirational Message"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="video-file">Video File (MP4/WebM)</Label>
+                    <Input
+                      id="video-file"
+                      type="file"
+                      accept="video/mp4,video/webm,video/quicktime"
+                      onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="video-description">Description</Label>
+                  <Textarea
+                    id="video-description"
+                    value={videoDescription}
+                    onChange={(e) => setVideoDescription(e.target.value)}
+                    required
+                    placeholder="Describe the video content..."
+                    rows={4}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="thumbnail">Thumbnail Image (optional)</Label>
+                  <Input
+                    id="thumbnail"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                  />
+                  <p className="text-sm text-muted-foreground">Recommended: 1280x720px (16:9 aspect ratio)</p>
+                </div>
+
+                {/* Upload Progress */}
+                {isUploading && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Uploading...</span>
+                      <span className="font-semibold text-primary">{uploadProgress}%</span>
+                    </div>
+                    <Progress value={uploadProgress} className="h-2" />
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full bg-primary hover:bg-primary/90"
+                  disabled={loading || isUploading}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {isUploading ? `Uploading ${uploadProgress}%...` : loading ? "Adding Video..." : "Add Video"}
+                </Button>
+              </form>
+            </Card>
+
+            <div className="space-y-4 sm:space-y-6">
+              <h2 className="text-xl sm:text-2xl font-bold">Manage Videos</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {videos.map((video) => (
+                  <Card key={video.id} className="group relative overflow-hidden bg-gradient-to-br from-card to-card/50 border-border/50">
+                    <div className="relative aspect-video overflow-hidden bg-secondary/50">
+                      {video.thumbnail_url ? (
+                        <img
+                          src={video.thumbnail_url}
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Play className="w-12 h-12 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg mb-2 line-clamp-1">{video.title}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{video.description}</p>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        {video.view_count || 0} views
+                      </div>
+                    </div>
+                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleVideoDelete(video.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
