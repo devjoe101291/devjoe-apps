@@ -172,16 +172,17 @@ const Admin = () => {
       if (appFile) {
         // Check file size - Supabase free tier limit is 50MB
         const MAX_SIZE = 50 * 1024 * 1024;
-        const r2Available = isR2Configured();
         
-        if (appFile.size > MAX_SIZE && !r2Available) {
+        if (appFile.size > MAX_SIZE) {
           throw new Error(
             `File size is ${formatFileSize(appFile.size)}. Supabase free tier has a 50MB upload limit.
 
-To upload larger files:
-1. Configure Cloudflare R2 (10GB free, already set up!)
-2. Upgrade to Supabase Pro ($25/month) for up to 5GB
-3. Or compress your APK to under 50MB`
+To upload this file, please:
+
+1. Compress your APK using ProGuard/R8 in Android Studio
+2. Use Android App Bundle (.aab) instead of APK
+3. Remove unused resources and libraries
+4. Or upgrade to Supabase Pro ($25/month)`
           );
         }
 

@@ -6,16 +6,6 @@ interface UploadProgress {
   percentage: number;
 }
 
-// Initialize R2 client
-const r2Client = new S3Client({
-  region: "auto",
-  endpoint: import.meta.env.VITE_R2_ENDPOINT,
-  credentials: {
-    accessKeyId: import.meta.env.VITE_R2_ACCESS_KEY_ID,
-    secretAccessKey: import.meta.env.VITE_R2_SECRET_ACCESS_KEY,
-  },
-});
-
 /**
  * Upload large files to Cloudflare R2
  * Files uploaded to R2 are accessible via the public URL
@@ -25,11 +15,14 @@ export const uploadToR2 = async (
   folder: string,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string> => {
+  const accessKeyId = import.meta.env.VITE_R2_ACCESS_KEY_ID;
+  const secretAccessKey = import.meta.env.VITE_R2_SECRET_ACCESS_KEY;
+  const endpoint = import.meta.env.VITE_R2_ENDPOINT;
   const bucketName = import.meta.env.VITE_R2_BUCKET_NAME;
   const publicUrl = import.meta.env.VITE_R2_PUBLIC_URL;
 
-  if (!bucketName || !publicUrl) {
-    throw new Error("R2 configuration missing. Please check your .env file.");
+  if (!accessKeyId || !secretAccessKey || !endpoint || !bucketName || !publicUrl) {
+    throw new Error("R2 configuration missing. Please check your environment variables.");
   }
 
   // Generate unique filename
@@ -44,6 +37,18 @@ export const uploadToR2 = async (
   }
 
   try {
+    // Initialize R2 client with proper configuration
+    const r2Client = new S3Client({
+      region: "auto",
+      endpoint: endpoint,
+      credentials: {
+        accessKeyId: accessKeyId,
+        secretAccessKey: secretAccessKey,
+      },
+      // Force path-style addressing for R2
+      forcePathStyle: false,
+    });
+
     // Convert file to ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
 
@@ -52,7 +57,7 @@ export const uploadToR2 = async (
       Bucket: bucketName,
       Key: fileName,
       Body: new Uint8Array(arrayBuffer),
-      ContentType: file.type,
+      ContentType: file.type || 'application/octet-stream',
     });
 
     await r2Client.send(command);
@@ -67,7 +72,11 @@ export const uploadToR2 = async (
     return filePublicUrl;
   } catch (error: any) {
     console.error("R2 upload error:", error);
-    throw new Error(`R2 upload failed: ${error.message}`);
+    // Provide more detailed error message
+    if (error.message?.includes('fetch')) {
+      throw new Error(`R2 upload failed: Network error. This might be due to CORS restrictions. Please ensure R2 CORS is configured correctly.`);
+    }
+    throw new Error(`R2 upload failed: ${error.message || 'Unknown error'}`);
   }
 };
 
