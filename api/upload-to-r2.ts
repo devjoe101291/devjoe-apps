@@ -27,11 +27,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Get file buffer from request body
-    const buffer = req.body;
+    // Collect raw body data
+    const chunks: Buffer[] = [];
     
-    if (!buffer || !Buffer.isBuffer(buffer)) {
-      return res.status(400).json({ error: 'Invalid file data' });
+    // Handle stream data
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    
+    const buffer = Buffer.concat(chunks);
+    
+    if (!buffer || buffer.length === 0) {
+      return res.status(400).json({ error: 'No file data received' });
     }
 
     // Generate unique filename
@@ -72,8 +79,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 export const config = {
   api: {
-    bodyParser: {
-      sizeLimit: '500mb',
-    },
+    bodyParser: false, // Disable body parsing for raw data
+    sizeLimit: '500mb',
   },
 };
