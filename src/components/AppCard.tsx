@@ -1,12 +1,15 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Monitor, Smartphone, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Monitor, Smartphone, Globe, Download } from "lucide-react";
 
 interface AppCardProps {
   name: string;
   description: string;
   platform: "android" | "windows" | "web";
   iconUrl?: string;
+  onDownload?: () => void;
+  download_count?: number;
 }
 
 const platformConfig = {
@@ -15,7 +18,7 @@ const platformConfig = {
   web: { icon: Globe, label: "Web", color: "bg-primary/10 text-primary border-primary/20" },
 };
 
-export const AppCard = ({ name, description, platform, iconUrl }: AppCardProps) => {
+export const AppCard = ({ name, description, platform, iconUrl, onDownload, download_count }: AppCardProps) => {
   const config = platformConfig[platform];
   const Icon = config.icon;
 
@@ -41,11 +44,25 @@ export const AppCard = ({ name, description, platform, iconUrl }: AppCardProps) 
           )}
         </div>
 
-        <div className="flex items-center gap-2 pt-2">
+        <div className="flex items-center justify-between gap-2 pt-2">
           <Badge variant="outline" className={`${config.color} gap-1.5`}>
             <Icon className="w-3.5 h-3.5" />
             {config.label}
           </Badge>
+          
+          {onDownload && (
+            <Button 
+              size="sm" 
+              onClick={onDownload}
+              className="bg-primary hover:bg-primary/90 gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Download
+              {download_count !== undefined && download_count > 0 && (
+                <span className="text-xs opacity-75">({download_count})</span>
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
