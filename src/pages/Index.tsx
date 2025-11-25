@@ -48,22 +48,47 @@ const Index = () => {
       return;
     }
 
-    // Increment download count
-    await supabase
-      .from('apps')
-      .update({ download_count: (app.download_count || 0) + 1 })
-      .eq('id', app.id);
+    try {
+      // Increment download count
+      await supabase
+        .from('apps')
+        .update({ download_count: (app.download_count || 0) + 1 })
+        .eq('id', app.id);
 
-    // Open download link
-    window.open(app.file_url, '_blank');
-    
-    toast({
-      title: "Download started",
-      description: `${app.name} is being downloaded.`,
-    });
+      // Get file extension from URL
+      const urlParts = app.file_url.split('.');
+      const extension = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
+      
+      // Create proper filename based on app name
+      const sanitizedName = app.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const filename = `${sanitizedName}.${extension}`;
 
-    // Refresh apps to show updated download count
-    fetchApps();
+      // Fetch the file and trigger download with proper name
+      const response = await fetch(app.file_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download started",
+        description: `${app.name} is being downloaded as ${filename}.`,
+      });
+
+      // Refresh apps to show updated download count
+      fetchApps();
+    } catch (error) {
+      toast({
+        title: "Download failed",
+        description: "There was an error downloading the file.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
