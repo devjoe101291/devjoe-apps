@@ -20,13 +20,16 @@ export const uploadFileChunked = async (
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string> => {
   // Validate file size (adjust based on your Supabase plan)
-  const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+  // Free tier: 50MB, Pro tier: 5GB
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for free tier
   if (file.size > MAX_FILE_SIZE) {
     throw new Error(
-      `File size exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB limit. Current size: ${(
-        file.size /
-        (1024 * 1024)
-      ).toFixed(2)}MB`
+      `File size is ${formatFileSize(file.size)}. Supabase free tier has a 50MB upload limit per file. To upload larger files, please:
+
+1. Upgrade to Supabase Pro ($25/month) for up to 5GB per file
+2. Or compress your file to under 50MB
+
+Visit: https://supabase.com/pricing`
     );
   }
 

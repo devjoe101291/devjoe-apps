@@ -170,10 +170,16 @@ const Admin = () => {
       }
 
       if (appFile) {
-        // Check file size
-        const MAX_SIZE = 500 * 1024 * 1024;
+        // Check file size - Supabase free tier limit is 50MB
+        const MAX_SIZE = 50 * 1024 * 1024;
         if (appFile.size > MAX_SIZE) {
-          throw new Error(`File size exceeds ${formatFileSize(MAX_SIZE)}. Current size: ${formatFileSize(appFile.size)}`);
+          throw new Error(
+            `File size is ${formatFileSize(appFile.size)}. Supabase free tier has a 50MB upload limit.
+
+To upload larger files:
+1. Upgrade to Supabase Pro ($25/month) for up to 5GB
+2. Or compress your APK to under 50MB`
+          );
         }
 
         // Check file extension (more reliable than MIME type for APK files)
