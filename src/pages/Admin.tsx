@@ -109,14 +109,27 @@ const Admin = () => {
   };
 
   const uploadFile = async (file: File, bucket: string, folder: string) => {
+    // Check file size (Supabase free tier limit is 50MB)
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error(`File size exceeds 50MB limit. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+    }
+
     const fileExt = file.name.split(".").pop();
-    const fileName = `${folder}/${Math.random()}.${fileExt}`;
+    const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     
+    // Upload with upsert option to allow overwriting and better handling
     const { error } = await supabase.storage
       .from(bucket)
-      .upload(fileName, file);
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Upload error:', error);
+      throw new Error(`Upload failed: ${error.message}`);
+    }
 
     const { data: { publicUrl } } = supabase.storage
       .from(bucket)
@@ -133,11 +146,27 @@ const Admin = () => {
       let iconUrl = null;
       let fileUrl = null;
 
+      // Validate file sizes before uploading
+      if (iconFile && iconFile.size > 50 * 1024 * 1024) {
+        throw new Error(`Icon file is too large: ${(iconFile.size / 1024 / 1024).toFixed(2)}MB. Maximum is 50MB.`);
+      }
+      if (appFile && appFile.size > 50 * 1024 * 1024) {
+        throw new Error(`App file is too large: ${(appFile.size / 1024 / 1024).toFixed(2)}MB. Maximum is 50MB.`);
+      }
+
       if (iconFile) {
+        toast({
+          title: "Uploading icon...",
+          description: "Please wait while we upload your icon.",
+        });
         iconUrl = await uploadFile(iconFile, "app-icons", "icons");
       }
 
       if (appFile) {
+        toast({
+          title: "Uploading app file...",
+          description: `Please wait while we upload your ${(appFile.size / 1024 / 1024).toFixed(2)}MB file. This may take a moment.`,
+        });
         fileUrl = await uploadFile(appFile, "app-files", "files");
       }
 
@@ -165,7 +194,7 @@ const Admin = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to add app. Please try again.",
         variant: "destructive",
       });
     }
@@ -210,11 +239,27 @@ const Admin = () => {
       let iconUrl = editingApp.icon_url;
       let fileUrl = editingApp.file_url;
 
+      // Validate file sizes before uploading
+      if (editIconFile && editIconFile.size > 50 * 1024 * 1024) {
+        throw new Error(`Icon file is too large: ${(editIconFile.size / 1024 / 1024).toFixed(2)}MB. Maximum is 50MB.`);
+      }
+      if (editAppFile && editAppFile.size > 50 * 1024 * 1024) {
+        throw new Error(`App file is too large: ${(editAppFile.size / 1024 / 1024).toFixed(2)}MB. Maximum is 50MB.`);
+      }
+
       if (editIconFile) {
+        toast({
+          title: "Uploading new icon...",
+          description: "Please wait while we upload your icon.",
+        });
         iconUrl = await uploadFile(editIconFile, "app-icons", "icons");
       }
 
       if (editAppFile) {
+        toast({
+          title: "Uploading new app file...",
+          description: `Please wait while we upload your ${(editAppFile.size / 1024 / 1024).toFixed(2)}MB file. This may take a moment.`,
+        });
         fileUrl = await uploadFile(editAppFile, "app-files", "files");
       }
 
@@ -242,7 +287,7 @@ const Admin = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to update app. Please try again.",
         variant: "destructive",
       });
     }
