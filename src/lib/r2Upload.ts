@@ -19,8 +19,29 @@ export const uploadToR2 = async (
   }
 
   try {
-    // Send file to serverless function
-    const response = await fetch('/api/upload-to-r2', {
+    // Check if API endpoint exists
+    const baseUrl = window.location.origin;
+    const testUrl = `${baseUrl}/api/test`;
+    const apiUrl = `${baseUrl}/api/upload-to-r2`;
+    
+    // Debug logging
+    console.log('R2 Upload Debug:', {
+      testUrl,
+      apiUrl,
+      fileSize: file.size,
+      fileType: file.type,
+      fileName: file.name
+    });
+    
+    // Test if API routes are working
+    try {
+      const testResponse = await fetch(testUrl, { method: 'GET' });
+      console.log('API Test Response:', testResponse.status, testResponse.ok);
+    } catch (testError) {
+      console.warn('API Test Failed:', testError);
+    }
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': file.type || 'application/octet-stream',
