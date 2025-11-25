@@ -85,16 +85,16 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex items-center justify-center p-3 sm:p-6">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
       
       <Card className="w-full max-w-md relative z-10 bg-card/95 backdrop-blur border-border/50">
-        <div className="p-8 space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+        <div className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+          <div className="text-center space-y-1 sm:space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent break-words px-2">
               Dev Joe Solutions
             </h1>
-            <p className="text-muted-foreground">Admin Access</p>
+            <p className="text-muted-foreground text-sm sm:text-base">Admin Access</p>
           </div>
 
           <Tabs defaultValue="login" className="w-full">

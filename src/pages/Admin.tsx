@@ -252,26 +252,27 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/50 bg-card/50 backdrop-blur sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-            Admin Dashboard
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+            <span className="hidden sm:inline">Admin Dashboard</span>
+            <span className="sm:hidden">Admin</span>
           </h1>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
-              <Home className="w-4 h-4" />
-              Home
+          <div className="flex gap-1 sm:gap-2">
+            <Button variant="outline" onClick={() => navigate("/")} className="gap-1 sm:gap-2 h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-4">
+              <Home className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Home</span>
             </Button>
-            <Button variant="outline" onClick={handleSignOut} className="gap-2">
-              <LogOut className="w-4 h-4" />
-              Logout
+            <Button variant="outline" onClick={handleSignOut} className="gap-1 sm:gap-2 h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-4">
+              <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Logout</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-12 space-y-12">
-        <Card className="p-8 bg-gradient-to-br from-card to-card/50 border-border/50">
-          <h2 className="text-2xl font-bold mb-6">Add New App</h2>
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
+        <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-br from-card to-card/50 border-border/50">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Add New App</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
@@ -345,9 +346,9 @@ const Admin = () => {
           </form>
         </Card>
 
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold">Manage Apps</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-4 sm:space-y-6">
+          <h2 className="text-xl sm:text-2xl font-bold">Manage Apps</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {apps.map((app) => (
               <div key={app.id} className="relative group">
                 <AppCard {...app} iconUrl={app.icon_url} />
