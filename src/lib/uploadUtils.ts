@@ -1,4 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import { uploadToR2, isR2Configured as checkR2Config } from "./r2Upload";
+
+export { checkR2Config as isR2Configured };
 
 const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks for optimal upload speed
 const MAX_CONCURRENT_CHUNKS = 3; // Upload 3 chunks in parallel
@@ -19,15 +22,25 @@ export const uploadFileChunked = async (
   folder: string,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string> => {
-  // Validate file size (adjust based on your Supabase plan)
-  // Free tier: 50MB, Pro tier: 5GB
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for free tier
-  if (file.size > MAX_FILE_SIZE) {
+  // Check if file is large and R2 is configured
+  const SUPABASE_LIMIT = 50 * 1024 * 1024; // 50MB
+  const isLargeFile = file.size >= SUPABASE_LIMIT;
+  const r2Available = checkR2Config();
+
+  // Use R2 for large files if configured
+  if (isLargeFile && r2Available) {
+    return await uploadToR2(file, folder, onProgress);
+  }
+
+  // Use Supabase for small files or if R2 not configured
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for Supabase free tier
+  if (file.size > MAX_FILE_SIZE && !r2Available) {
     throw new Error(
       `File size is ${formatFileSize(file.size)}. Supabase free tier has a 50MB upload limit per file. To upload larger files, please:
 
 1. Upgrade to Supabase Pro ($25/month) for up to 5GB per file
 2. Or compress your file to under 50MB
+3. Or configure Cloudflare R2 for free large file uploads
 
 Visit: https://supabase.com/pricing`
     );

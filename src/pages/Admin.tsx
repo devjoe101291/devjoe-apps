@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LogOut, Plus, Trash2, Upload, Home, Edit, Video, Play } from "lucide-react";
 import { AppCard } from "@/components/AppCard";
-import { uploadFileChunked, uploadImage, formatFileSize, validateFile } from "@/lib/uploadUtils";
+import { uploadFileChunked, uploadImage, formatFileSize, validateFile, isR2Configured } from "@/lib/uploadUtils";
 import { Progress } from "@/components/ui/progress";
 import type { User } from "@supabase/supabase-js";
 
@@ -172,13 +172,16 @@ const Admin = () => {
       if (appFile) {
         // Check file size - Supabase free tier limit is 50MB
         const MAX_SIZE = 50 * 1024 * 1024;
-        if (appFile.size > MAX_SIZE) {
+        const r2Available = isR2Configured();
+        
+        if (appFile.size > MAX_SIZE && !r2Available) {
           throw new Error(
             `File size is ${formatFileSize(appFile.size)}. Supabase free tier has a 50MB upload limit.
 
 To upload larger files:
-1. Upgrade to Supabase Pro ($25/month) for up to 5GB
-2. Or compress your APK to under 50MB`
+1. Configure Cloudflare R2 (10GB free, already set up!)
+2. Upgrade to Supabase Pro ($25/month) for up to 5GB
+3. Or compress your APK to under 50MB`
           );
         }
 
