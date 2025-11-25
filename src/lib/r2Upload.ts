@@ -30,7 +30,7 @@ export const uploadToR2 = async (
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Upload failed: ${response.statusText}`);
+      throw new Error(`Upload failed: ${response.status} ${response.statusText}. ${errorData.message || ''}`);
     }
 
     const result = await response.json();
@@ -47,6 +47,20 @@ export const uploadToR2 = async (
     }
   } catch (error: any) {
     console.error('R2 upload error:', error);
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Failed to connect to upload service. Please check your internet connection and try again.');
+    }
+    
+    if (error.message?.includes('404')) {
+      throw new Error('Upload service not found. The serverless function may still be deploying.');
+    }
+    
+    if (error.message?.includes('413')) {
+      throw new Error('File too large. Please compress your file or split it into smaller parts.');
+    }
+    
     throw new Error(`R2 upload failed: ${error.message || 'Unknown error'}`);
   }
 };
