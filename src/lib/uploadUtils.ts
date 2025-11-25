@@ -22,25 +22,21 @@ export const uploadFileChunked = async (
   folder: string,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string> => {
-  // Check if file is large and R2 is configured
+  // Check if file is large
   const SUPABASE_LIMIT = 50 * 1024 * 1024; // 50MB
   const isLargeFile = file.size >= SUPABASE_LIMIT;
   const r2Available = checkR2Config();
 
-  // For now, always use Supabase due to CORS limitations with R2 from browser
-  // Large files need server-side upload or CORS configuration
+  // Use R2 serverless function for large files (no CORS issues!)
+  if (isLargeFile && r2Available) {
+    return await uploadToR2(file, folder, onProgress);
+  }
+
+  // Use Supabase for small files
   const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for Supabase free tier
-  if (file.size > MAX_FILE_SIZE) {
+  if (file.size > MAX_FILE_SIZE && !r2Available) {
     throw new Error(
-      `File size is ${formatFileSize(file.size)}. Supabase free tier has a 50MB upload limit per file.
-
-To upload larger files, you have these options:
-
-1. Compress your file to under 50MB (recommended)
-2. Upgrade to Supabase Pro ($25/month) for up to 5GB per file
-3. Split your app into smaller components
-
-For the 133MB file, try using tools like ProGuard or Android App Bundle to reduce size.`
+      `File size is ${formatFileSize(file.size)}. Supabase free tier has a 50MB upload limit per file.\n\nTo upload larger files, please configure Cloudflare R2 (free 10GB storage) or upgrade to Supabase Pro ($25/month) for up to 5GB per file.`
     );
   }
 

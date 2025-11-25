@@ -4,5 +4,11 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/upload-to-r2.ts": {
+      "maxDuration": 60,
+      "memory": 3008
+    }
+  }
 }
