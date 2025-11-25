@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LogOut, Plus, Trash2, Upload, Home, Edit } from "lucide-react";
 import { AppCard } from "@/components/AppCard";
+import { uploadFileChunked, uploadImage, formatFileSize, validateFile } from "@/lib/uploadUtils";
+import { Progress } from "@/components/ui/progress";
 import type { User } from "@supabase/supabase-js";
 
 interface App {
@@ -41,6 +43,8 @@ const Admin = () => {
   const [editPlatform, setEditPlatform] = useState<"android" | "windows" | "web">("android");
   const [editIconFile, setEditIconFile] = useState<File | null>(null);
   const [editAppFile, setEditAppFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -108,67 +112,71 @@ const Admin = () => {
     navigate("/");
   };
 
-  const uploadFile = async (file: File, bucket: string, folder: string) => {
-    // Check file size (Supabase free tier limit is 50MB)
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error(`File size exceeds 50MB limit. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-    }
-
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-    
-    // Upload with upsert option to allow overwriting and better handling
-    const { error } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: true
-      });
-
-    if (error) {
-      console.error('Upload error:', error);
-      throw new Error(`Upload failed: ${error.message}`);
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(fileName);
-
-    return publicUrl;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setIsUploading(true);
+    setUploadProgress(0);
 
     try {
       let iconUrl = null;
       let fileUrl = null;
 
-      // Validate file sizes before uploading
-      if (iconFile && iconFile.size > 50 * 1024 * 1024) {
-        throw new Error(`Icon file is too large: ${(iconFile.size / 1024 / 1024).toFixed(2)}MB. Maximum is 50MB.`);
-      }
-      if (appFile && appFile.size > 50 * 1024 * 1024) {
-        throw new Error(`App file is too large: ${(appFile.size / 1024 / 1024).toFixed(2)}MB. Maximum is 50MB.`);
-      }
-
+      // Validate files
       if (iconFile) {
-        toast({
-          title: "Uploading icon...",
-          description: "Please wait while we upload your icon.",
-        });
-        iconUrl = await uploadFile(iconFile, "app-icons", "icons");
+        const validation = validateFile(iconFile, 10 * 1024 * 1024, [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+        ]);
+        if (!validation.valid) {
+          throw new Error(validation.error);
+        }
       }
 
       if (appFile) {
+        const validation = validateFile(appFile, 500 * 1024 * 1024, [
+          "application/vnd.android.package-archive",
+          "application/x-msdownload",
+          "application/zip",
+          "application/x-zip-compressed",
+          "application/octet-stream",
+        ]);
+        if (!validation.valid) {
+          throw new Error(validation.error);
+        }
+      }
+
+      // Upload icon
+      if (iconFile) {
+        toast({
+          title: "Uploading icon...",
+          description: `Size: ${formatFileSize(iconFile.size)}`,
+        });
+        iconUrl = await uploadImage(iconFile, "app-icons", "icons", (progress) => {
+          setUploadProgress(Math.round(progress.percentage / 2)); // 0-50%
+        });
+      }
+
+      // Upload app file with chunked upload
+      if (appFile) {
         toast({
           title: "Uploading app file...",
-          description: `Please wait while we upload your ${(appFile.size / 1024 / 1024).toFixed(2)}MB file. This may take a moment.`,
+          description: `Size: ${formatFileSize(appFile.size)}. Using optimized chunked upload for faster transfer.`,
         });
-        fileUrl = await uploadFile(appFile, "app-files", "files");
+        fileUrl = await uploadFileChunked(
+          appFile,
+          "app-files",
+          "files",
+          (progress) => {
+            const baseProgress = iconFile ? 50 : 0;
+            const fileProgress = iconFile ? progress.percentage / 2 : progress.percentage;
+            setUploadProgress(Math.round(baseProgress + fileProgress));
+          }
+        );
       }
+
+      setUploadProgress(100);
 
       const { error } = await supabase.from("apps").insert({
         name,
@@ -190,6 +198,7 @@ const Admin = () => {
       setPlatform("android");
       setIconFile(null);
       setAppFile(null);
+      setUploadProgress(0);
       fetchApps();
     } catch (error: any) {
       toast({
@@ -197,9 +206,11 @@ const Admin = () => {
         description: error.message || "Failed to add app. Please try again.",
         variant: "destructive",
       });
+      setUploadProgress(0);
     }
 
     setLoading(false);
+    setIsUploading(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -234,34 +245,41 @@ const Admin = () => {
     e.preventDefault();
     if (!editingApp) return;
     setLoading(true);
+    setIsUploading(true);
+    setUploadProgress(0);
 
     try {
       let iconUrl = editingApp.icon_url;
       let fileUrl = editingApp.file_url;
 
-      // Validate file sizes before uploading
-      if (editIconFile && editIconFile.size > 50 * 1024 * 1024) {
-        throw new Error(`Icon file is too large: ${(editIconFile.size / 1024 / 1024).toFixed(2)}MB. Maximum is 50MB.`);
-      }
-      if (editAppFile && editAppFile.size > 50 * 1024 * 1024) {
-        throw new Error(`App file is too large: ${(editAppFile.size / 1024 / 1024).toFixed(2)}MB. Maximum is 50MB.`);
-      }
-
       if (editIconFile) {
         toast({
           title: "Uploading new icon...",
-          description: "Please wait while we upload your icon.",
+          description: `Size: ${formatFileSize(editIconFile.size)}`,
         });
-        iconUrl = await uploadFile(editIconFile, "app-icons", "icons");
+        iconUrl = await uploadImage(editIconFile, "app-icons", "icons", (progress) => {
+          setUploadProgress(Math.round(progress.percentage / 2));
+        });
       }
 
       if (editAppFile) {
         toast({
           title: "Uploading new app file...",
-          description: `Please wait while we upload your ${(editAppFile.size / 1024 / 1024).toFixed(2)}MB file. This may take a moment.`,
+          description: `Size: ${formatFileSize(editAppFile.size)}. Using optimized chunked upload.`,
         });
-        fileUrl = await uploadFile(editAppFile, "app-files", "files");
+        fileUrl = await uploadFileChunked(
+          editAppFile,
+          "app-files",
+          "files",
+          (progress) => {
+            const baseProgress = editIconFile ? 50 : 0;
+            const fileProgress = editIconFile ? progress.percentage / 2 : progress.percentage;
+            setUploadProgress(Math.round(baseProgress + fileProgress));
+          }
+        );
       }
+
+      setUploadProgress(100);
 
       const { error } = await supabase
         .from("apps")
@@ -283,6 +301,7 @@ const Admin = () => {
 
       setEditDialogOpen(false);
       setEditingApp(null);
+      setUploadProgress(0);
       fetchApps();
     } catch (error: any) {
       toast({
@@ -290,9 +309,11 @@ const Admin = () => {
         description: error.message || "Failed to update app. Please try again.",
         variant: "destructive",
       });
+      setUploadProgress(0);
     }
 
     setLoading(false);
+    setIsUploading(false);
   };
 
   return (
@@ -381,13 +402,24 @@ const Admin = () => {
               </div>
             </div>
 
+            {/* Upload Progress */}
+            {isUploading && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Uploading...</span>
+                  <span className="font-semibold text-primary">{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
+
             <Button 
               type="submit" 
               className="w-full bg-primary hover:bg-primary/90"
-              disabled={loading}
+              disabled={loading || isUploading}
             >
               <Plus className="w-4 h-4 mr-2" />
-              {loading ? "Adding App..." : "Add App"}
+              {isUploading ? `Uploading ${uploadProgress}%...` : loading ? "Adding App..." : "Add App"}
             </Button>
           </form>
         </Card>
@@ -498,14 +530,25 @@ const Admin = () => {
               </div>
             </div>
 
+            {/* Upload Progress */}
+            {isUploading && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Uploading...</span>
+                  <span className="font-semibold text-primary">{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
+
             <div className="flex gap-3">
               <Button 
                 type="submit" 
                 className="flex-1 bg-primary hover:bg-primary/90"
-                disabled={loading}
+                disabled={loading || isUploading}
               >
                 <Edit className="w-4 h-4 mr-2" />
-                {loading ? "Updating..." : "Update App"}
+                {isUploading ? `Uploading ${uploadProgress}%...` : loading ? "Updating..." : "Update App"}
               </Button>
               <Button 
                 type="button" 
