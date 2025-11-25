@@ -104,17 +104,6 @@ const Index = () => {
             Crafting innovative applications across Android, Windows, and Web platforms. 
             Explore my collection of projects and solutions.
           </p>
-          
-          <div className="flex items-center justify-center gap-4 pt-4">
-            <Button 
-              size="lg" 
-              onClick={() => navigate("/auth")}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-[0_0_20px_hsl(193_95%_55%_/_0.3)] hover:shadow-[0_0_30px_hsl(193_95%_55%_/_0.5)] transition-all"
-            >
-              <Lock className="w-5 h-5 mr-2" />
-              Admin Login
-            </Button>
-          </div>
         </div>
 
         {/* Bottom Fade */}
