@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { AppCard } from "@/components/AppCard";
 import { Button } from "@/components/ui/button";
-import { Code2, Sparkles, Lock } from "lucide-react";
+import { Code2, Sparkles, Lock, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface App {
   id: string;
@@ -13,10 +14,12 @@ interface App {
   platform: "android" | "windows" | "web";
   icon_url?: string;
   file_url?: string;
+  download_count?: number;
 }
 
 const Index = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [apps, setApps] = useState<App[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,6 +36,34 @@ const Index = () => {
 
     setApps((data as App[]) || []);
     setLoading(false);
+  };
+
+  const handleDownload = async (app: App) => {
+    if (!app.file_url) {
+      toast({
+        title: "Download unavailable",
+        description: "This app doesn't have a download file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Increment download count
+    await supabase
+      .from('apps')
+      .update({ download_count: (app.download_count || 0) + 1 })
+      .eq('id', app.id);
+
+    // Open download link
+    window.open(app.file_url, '_blank');
+    
+    toast({
+      title: "Download started",
+      description: `${app.name} is being downloaded.`,
+    });
+
+    // Refresh apps to show updated download count
+    fetchApps();
   };
 
   return (
@@ -114,7 +145,7 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
               {apps.map((app, index) => (
                 <div key={app.id} style={{ animationDelay: `${0.3 + index * 0.1}s` }} className="animate-fade-in">
-                  <AppCard {...app} iconUrl={app.icon_url} />
+                  <AppCard {...app} iconUrl={app.icon_url} onDownload={() => handleDownload(app)} download_count={app.download_count} />
                 </div>
               ))}
             </div>

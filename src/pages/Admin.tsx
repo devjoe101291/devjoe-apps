@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LogOut, Plus, Trash2, Upload, Home } from "lucide-react";
 import { AppCard } from "@/components/AppCard";
+import type { User } from "@supabase/supabase-js";
 
 interface App {
   id: string;
@@ -23,6 +24,7 @@ interface App {
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [apps, setApps] = useState<App[]>([]);
   const [name, setName] = useState("");
@@ -33,14 +35,46 @@ const Admin = () => {
 
   useEffect(() => {
     checkAuth();
-    fetchApps();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      checkAdminRole();
+    }
+  }, [user]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
+      return;
     }
+    setUser(session.user);
+  };
+
+  const checkAdminRole = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+
+    if (error || !data) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have admin access. Please contact the administrator.",
+        variant: "destructive",
+      });
+      await supabase.auth.signOut();
+      navigate("/");
+      return;
+    }
+
+    // User is admin, fetch apps
+    fetchApps();
   };
 
   const fetchApps = async () => {
