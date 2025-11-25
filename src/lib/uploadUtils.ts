@@ -35,13 +35,8 @@ export const uploadFileChunked = async (
     .toString(36)
     .substring(7)}.${fileExt}`;
 
-  // For small files (< 10MB), use direct upload
-  if (file.size < 10 * 1024 * 1024) {
-    return await uploadFileDirect(file, bucket, fileName, onProgress);
-  }
-
-  // For large files, use chunked upload
-  return await uploadLargeFile(file, bucket, fileName, onProgress);
+  // Use direct upload for all files - more reliable than chunking with Supabase
+  return await uploadFileDirect(file, bucket, fileName, onProgress);
 };
 
 /**
@@ -53,6 +48,11 @@ const uploadFileDirect = async (
   fileName: string,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string> => {
+  // Show initial progress
+  if (onProgress) {
+    onProgress({ loaded: 0, total: file.size, percentage: 0 });
+  }
+
   const { error } = await supabase.storage.from(bucket).upload(fileName, file, {
     cacheControl: "3600",
     upsert: true,
@@ -63,6 +63,7 @@ const uploadFileDirect = async (
     throw new Error(`Upload failed: ${error.message}`);
   }
 
+  // Show completion progress
   if (onProgress) {
     onProgress({ loaded: file.size, total: file.size, percentage: 100 });
   }
