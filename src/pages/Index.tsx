@@ -94,7 +94,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[60vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background Image */}
         <div 
           className="absolute inset-0 z-0"
@@ -113,8 +113,8 @@ const Index = () => {
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] animate-pulse z-0" />
         
         {/* Content */}
-        <div className="relative z-10 container mx-auto px-4 sm:px-6 text-center space-y-4 sm:space-y-8 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs sm:text-sm font-medium mb-2 sm:mb-4">
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 text-center space-y-3 sm:space-y-8 animate-fade-in py-8 sm:py-0">
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs sm:text-sm font-medium mb-1 sm:mb-4">
             <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="hidden xs:inline">App Development Portfolio</span>
             <span className="xs:hidden">Portfolio</span>
@@ -133,7 +133,7 @@ const Index = () => {
         </div>
 
         {/* Bottom Fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-10" />
+        <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-32 bg-gradient-to-t from-background to-transparent z-10" />
       </section>
 
       {/* Apps Showcase Section */}
