@@ -20,6 +20,7 @@ interface App {
   platform: "android" | "windows" | "web";
   icon_url?: string;
   file_url?: string;
+  download_count?: number;
 }
 
 const Admin = () => {
@@ -352,6 +353,11 @@ const Admin = () => {
             {apps.map((app) => (
               <div key={app.id} className="relative group">
                 <AppCard {...app} iconUrl={app.icon_url} />
+                {/* Download Count Badge - Admin Only */}
+                <div className="absolute top-2 left-2 bg-primary/90 text-primary-foreground px-2 py-1 rounded-md text-xs sm:text-sm font-semibold shadow-lg z-10">
+                  <span className="hidden xs:inline">{app.download_count || 0} Downloads</span>
+                  <span className="xs:hidden">{app.download_count || 0} DL</span>
+                </div>
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
                     variant="secondary"

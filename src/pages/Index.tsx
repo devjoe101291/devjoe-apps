@@ -120,13 +120,13 @@ const Index = () => {
             <span className="xs:hidden">Portfolio</span>
           </div>
           
-          <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight px-2">
+          <h1 className="text-4xl xs:text-5xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight px-2">
             <span className="bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent break-words">
               Dev Joe Solutions
             </span>
           </h1>
           
-          <p className="text-sm xs:text-base sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">
+          <p className="text-base xs:text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">
             Crafting innovative applications across Android, Windows, and Web platforms. 
             Explore my collection of projects and solutions.
           </p>
@@ -142,28 +142,28 @@ const Index = () => {
           {/* Inspirational Quotes */}
           <div className="max-w-4xl mx-auto mb-12 sm:mb-20 space-y-6 sm:space-y-8">
             <blockquote className="relative border-l-4 border-primary pl-4 sm:pl-6 py-3 sm:py-4 bg-card/30 rounded-r-lg backdrop-blur">
-              <p className="text-sm sm:text-base md:text-lg text-muted-foreground italic leading-relaxed mb-2">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground italic leading-relaxed mb-2">
                 "God is most glorified in us when we are most satisfied in Him"
               </p>
-              <footer className="text-xs sm:text-sm text-primary font-medium">
+              <footer className="text-sm sm:text-base text-primary font-medium">
                 ― John Piper
               </footer>
             </blockquote>
 
             <blockquote className="relative border-l-4 border-primary pl-4 sm:pl-6 py-3 sm:py-4 bg-card/30 rounded-r-lg backdrop-blur">
-              <p className="text-sm sm:text-base md:text-lg text-muted-foreground italic leading-relaxed mb-2">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground italic leading-relaxed mb-2">
                 "If God is the Creator of the entire universe, then it must follow that He is the Lord of the whole universe. No part of the world is outside of His lordship. That means that no part of my life must be outside of His lordship."
               </p>
-              <footer className="text-xs sm:text-sm text-primary font-medium">
+              <footer className="text-sm sm:text-base text-primary font-medium">
                 ― R.C. Sproul
               </footer>
             </blockquote>
 
             <blockquote className="relative border-l-4 border-primary pl-4 sm:pl-6 py-3 sm:py-4 bg-card/30 rounded-r-lg backdrop-blur">
-              <p className="text-sm sm:text-base md:text-lg text-muted-foreground italic leading-relaxed mb-2">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground italic leading-relaxed mb-2">
                 "We should ask God to increase our hope when it is small, awaken it when it is dormant, confirm it when it is wavering, strengthen it when it is weak, and raise it up when it is overthrown."
               </p>
-              <footer className="text-xs sm:text-sm text-primary font-medium">
+              <footer className="text-sm sm:text-base text-primary font-medium">
                 ― John Calvin
               </footer>
             </blockquote>
@@ -175,7 +175,7 @@ const Index = () => {
                 Featured Apps
               </span>
             </h2>
-            <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-2">
+            <p className="text-muted-foreground text-base sm:text-lg md:text-xl max-w-2xl mx-auto px-2">
               A showcase of applications built with modern technologies and best practices
             </p>
           </div>
