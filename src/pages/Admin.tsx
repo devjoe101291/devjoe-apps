@@ -170,15 +170,19 @@ const Admin = () => {
       }
 
       if (appFile) {
-        const validation = validateFile(appFile, 500 * 1024 * 1024, [
-          "application/vnd.android.package-archive",
-          "application/x-msdownload",
-          "application/zip",
-          "application/x-zip-compressed",
-          "application/octet-stream",
-        ]);
-        if (!validation.valid) {
-          throw new Error(validation.error);
+        // Check file size
+        const MAX_SIZE = 500 * 1024 * 1024;
+        if (appFile.size > MAX_SIZE) {
+          throw new Error(`File size exceeds ${formatFileSize(MAX_SIZE)}. Current size: ${formatFileSize(appFile.size)}`);
+        }
+
+        // Check file extension (more reliable than MIME type for APK files)
+        const fileName = appFile.name.toLowerCase();
+        const validExtensions = ['.apk', '.exe', '.zip', '.msi', '.rar'];
+        const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+        
+        if (!hasValidExtension) {
+          throw new Error(`Invalid file type. Please upload: ${validExtensions.join(', ')}`);
         }
       }
 
@@ -576,7 +580,7 @@ const Admin = () => {
                 <Input
                   id="file"
                   type="file"
-                  accept=".apk,.exe,.zip,.msi"
+                  accept=".apk,.exe,.zip,.msi,.rar"
                   onChange={(e) => setAppFile(e.target.files?.[0] || null)}
                 />
               </div>
@@ -819,7 +823,7 @@ const Admin = () => {
                 <Input
                   id="edit-file"
                   type="file"
-                  accept=".apk,.exe,.zip,.msi"
+                  accept=".apk,.exe,.zip,.msi,.rar"
                   onChange={(e) => setEditAppFile(e.target.files?.[0] || null)}
                 />
                 {editingApp?.file_url && !editAppFile && (
