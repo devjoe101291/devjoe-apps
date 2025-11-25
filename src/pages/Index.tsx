@@ -139,6 +139,36 @@ const Index = () => {
       {/* Apps Showcase Section */}
       <section className="py-12 sm:py-24 px-4 sm:px-6">
         <div className="container mx-auto">
+          {/* Inspirational Quotes */}
+          <div className="max-w-4xl mx-auto mb-12 sm:mb-20 space-y-6 sm:space-y-8">
+            <blockquote className="relative border-l-4 border-primary pl-4 sm:pl-6 py-3 sm:py-4 bg-card/30 rounded-r-lg backdrop-blur">
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground italic leading-relaxed mb-2">
+                "God is most glorified in us when we are most satisfied in Him"
+              </p>
+              <footer className="text-xs sm:text-sm text-primary font-medium">
+                ― John Piper
+              </footer>
+            </blockquote>
+
+            <blockquote className="relative border-l-4 border-primary pl-4 sm:pl-6 py-3 sm:py-4 bg-card/30 rounded-r-lg backdrop-blur">
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground italic leading-relaxed mb-2">
+                "If God is the Creator of the entire universe, then it must follow that He is the Lord of the whole universe. No part of the world is outside of His lordship. That means that no part of my life must be outside of His lordship."
+              </p>
+              <footer className="text-xs sm:text-sm text-primary font-medium">
+                ― R.C. Sproul
+              </footer>
+            </blockquote>
+
+            <blockquote className="relative border-l-4 border-primary pl-4 sm:pl-6 py-3 sm:py-4 bg-card/30 rounded-r-lg backdrop-blur">
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground italic leading-relaxed mb-2">
+                "We should ask God to increase our hope when it is small, awaken it when it is dormant, confirm it when it is wavering, strengthen it when it is weak, and raise it up when it is overthrown."
+              </p>
+              <footer className="text-xs sm:text-sm text-primary font-medium">
+                ― John Calvin
+              </footer>
+            </blockquote>
+          </div>
+
           <div className="text-center space-y-2 sm:space-y-4 mb-8 sm:mb-16 animate-fade-in">
             <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold px-2">
               <span className="bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
