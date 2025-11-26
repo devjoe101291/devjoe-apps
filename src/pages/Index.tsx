@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ReactPlayer from "react-player";
 
 interface App {
   id: string;
@@ -262,16 +263,42 @@ const Index = () => {
                       </div>
                     </div>
                   ) : url ? (
-                    // Native file upload
-                    <div className="aspect-video relative">
-                      <video controls poster={video.thumbnail_url || undefined} className="w-full h-full object-cover rounded-lg border">
-                        <source src={video.video_url} />
-                        Your browser does not support the video tag.
-                      </video>
-                      <div className="p-4 bg-card/80 rounded-b-lg">
-                        <h3 className="font-bold text-lg mb-1">{video.title}</h3>
-                        <p className="text-muted-foreground text-sm">{video.description}</p>
+                    // Modern video player with ReactPlayer
+                    <div className="group relative bg-gradient-to-br from-card to-card/50 border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_hsl(193_95%_55%_/_0.2)] rounded-lg overflow-hidden">
+                      <div className="aspect-video relative bg-black">
+                        {/* @ts-ignore - ReactPlayer type definitions issue */}
+                        <ReactPlayer
+                          url={video.video_url}
+                          controls
+                          width="100%"
+                          height="100%"
+                          light={video.thumbnail_url || false}
+                          playing={false}
+                          playsinline
+                          config={{
+                            file: {
+                              attributes: {
+                                controlsList: 'nodownload',
+                                preload: 'metadata',
+                                playsInline: true
+                              },
+                              forceVideo: true
+                            }
+                          }}
+                          style={{
+                            borderRadius: '0.5rem 0.5rem 0 0'
+                          }}
+                        />
                       </div>
+                      <div className="relative p-4 sm:p-6 space-y-2 bg-gradient-to-br from-card to-card/50">
+                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                          {video.title}
+                        </h3>
+                        <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed line-clamp-2">
+                          {video.description}
+                        </p>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   ) : null}
                 </div>
