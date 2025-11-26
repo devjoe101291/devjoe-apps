@@ -46,6 +46,13 @@ const Admin = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
+  // R2 Storage monitoring
+  const [r2StorageUsed, setR2StorageUsed] = useState(0);
+  const R2_FREE_TIER_LIMIT = 10 * 1024 * 1024 * 1024; // 10 GB in bytes
+  const storagePercentage = (r2StorageUsed / R2_FREE_TIER_LIMIT) * 100;
+  const showStorageWarning = storagePercentage >= 80; // Show warning at 80%
+  const storageCritical = storagePercentage >= 95; // Critical at 95%
+
   // --- state for new video form ---
   const [videoTitle, setVideoTitle] = useState("");
   const [videoDescription, setVideoDescription] = useState("");
@@ -58,6 +65,7 @@ const Admin = () => {
 
   useEffect(() => {
     checkAuth();
+    calculateR2StorageUsage();
   }, []);
 
   useEffect(() => {
@@ -132,6 +140,36 @@ const Admin = () => {
       });
     } else {
       setVideos((data as any) || []);
+      // Recalculate storage after fetching videos
+      calculateR2StorageUsage();
+    }
+  };
+
+  // Calculate R2 storage usage from video URLs
+  const calculateR2StorageUsage = async () => {
+    try {
+      const { data } = await supabase
+        .from("videos" as any)
+        .select("video_url");
+      
+      if (!data) return;
+
+      // Estimate storage based on R2 URLs
+      // This is an approximation - for exact usage, you'd need to query R2 API
+      let totalSize = 0;
+      
+      for (const video of data) {
+        if (video.video_url && video.video_url.includes('r2.dev')) {
+          // Estimate: We'll fetch file sizes when available
+          // For now, we'll use a conservative estimate
+          // In production, you'd want to store file_size in the database
+          totalSize += 100 * 1024 * 1024; // Assume 100MB per video as placeholder
+        }
+      }
+      
+      setR2StorageUsed(totalSize);
+    } catch (error) {
+      console.error('Error calculating R2 storage:', error);
     }
   };
 
@@ -455,6 +493,7 @@ const Admin = () => {
         description: "Video deleted successfully.",
       });
       fetchVideos();
+      calculateR2StorageUsage(); // Recalculate after deletion
     }
   };
 
@@ -478,6 +517,48 @@ const Admin = () => {
           </div>
         </div>
       </header>
+
+      {/* R2 Storage Warning Banner */}
+      {showStorageWarning && (
+        <div className={`animate-in slide-in-from-top ${
+          storageCritical 
+            ? 'bg-destructive/90 text-destructive-foreground'
+            : 'bg-yellow-500/90 text-yellow-950'
+        } border-b-2 ${
+          storageCritical
+            ? 'border-destructive'
+            : 'border-yellow-600'
+        }`}>
+          <div className="container mx-auto px-4 sm:px-6 py-3">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <p className="font-bold text-sm sm:text-base">
+                    {storageCritical ? '⚠️ Critical: ' : '⚠️ Warning: '}R2 Storage {storageCritical ? 'Almost Full!' : 'Getting Full'}
+                  </p>
+                  <p className="text-xs sm:text-sm opacity-90">
+                    Using {(r2StorageUsed / 1024 / 1024 / 1024).toFixed(2)} GB of 10 GB free tier ({storagePercentage.toFixed(1)}%) - 
+                    {storageCritical 
+                      ? ' Delete old videos immediately or upgrade your plan!'
+                      : ' Consider deleting old videos or upgrading to avoid upload failures.'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className={storageCritical ? 'bg-white text-destructive hover:bg-white/90' : 'bg-white text-yellow-900 hover:bg-white/90'}
+                onClick={() => window.open('https://dash.cloudflare.com/', '_blank')}
+              >
+                View in Cloudflare
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
         {/* Tabs */}
