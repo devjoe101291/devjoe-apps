@@ -206,7 +206,15 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
               {apps.map((app, index) => (
                 <div key={app.id} style={{ animationDelay: `${0.3 + index * 0.1}s` }} className="animate-fade-in">
-                  <AppCard {...app} iconUrl={app.icon_url} onDownload={() => handleDownload(app)} download_count={app.download_count} />
+                  <AppCard 
+                    id={app.id}
+                    name={app.name}
+                    description={app.description}
+                    platform={app.platform}
+                    iconUrl={app.icon_url}
+                    onDownload={() => handleDownload(app)}
+                    download_count={app.download_count}
+                  />
                 </div>
               ))}
             </div>

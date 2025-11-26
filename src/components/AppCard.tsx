@@ -2,8 +2,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Monitor, Smartphone, Globe, Download } from "lucide-react";
+import { AppComments } from "@/components/AppComments";
 
 interface AppCardProps {
+  id: string;
   name: string;
   description: string;
   platform: "android" | "windows" | "web";
@@ -18,7 +20,7 @@ const platformConfig = {
   web: { icon: Globe, label: "Web", color: "bg-primary/10 text-primary border-primary/20" },
 };
 
-export const AppCard = ({ name, description, platform, iconUrl, onDownload, download_count }: AppCardProps) => {
+export const AppCard = ({ id, name, description, platform, iconUrl, onDownload, download_count }: AppCardProps) => {
   const config = platformConfig[platform];
   const Icon = config.icon;
 
@@ -65,6 +67,9 @@ export const AppCard = ({ name, description, platform, iconUrl, onDownload, down
             </Button>
           )}
         </div>
+
+        {/* Comments Section */}
+        <AppComments appId={id} appName={name} />
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
