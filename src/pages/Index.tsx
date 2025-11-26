@@ -24,6 +24,7 @@ const Index = () => {
   const { toast } = useToast();
   const [apps, setApps] = useState<App[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Track visitor
   useVisitorTracking();
@@ -35,6 +36,7 @@ const Index = () => {
   useEffect(() => {
     fetchApps();
     fetchVideos();
+    checkIfAdmin();
   }, []);
 
   const fetchApps = async () => {
@@ -56,6 +58,23 @@ const Index = () => {
       .order("created_at", { ascending: false });
     setVideos((data as any[]) || []);
     setLoadingVideos(false);
+  };
+
+  const checkIfAdmin = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setIsAdmin(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .eq('role', 'admin')
+      .single();
+
+    setIsAdmin(!!data);
   };
 
   const handleDownload = async (app: App) => {
@@ -218,6 +237,7 @@ const Index = () => {
                     iconUrl={app.icon_url}
                     onDownload={() => handleDownload(app)}
                     download_count={app.download_count}
+                    isAdmin={isAdmin}
                   />
                 </div>
               ))}
