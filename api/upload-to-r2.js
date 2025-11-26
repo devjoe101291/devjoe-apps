@@ -39,6 +39,16 @@ module.exports = async function handler(request, response) {
     console.log('Starting R2 upload...');
     console.log('Content-Type:', request.headers['content-type']);
     console.log('Content-Length:', request.headers['content-length']);
+    
+    // Check if R2 is configured
+    if (!process.env.VITE_R2_ENDPOINT || !process.env.VITE_R2_ACCESS_KEY_ID || 
+        !process.env.VITE_R2_SECRET_ACCESS_KEY || !process.env.VITE_R2_BUCKET_NAME) {
+      console.error('R2 environment variables not configured');
+      return response.status(500).json({ 
+        error: 'R2 not configured',
+        message: 'R2 environment variables are missing. Please configure VITE_R2_ENDPOINT, VITE_R2_ACCESS_KEY_ID, VITE_R2_SECRET_ACCESS_KEY, and VITE_R2_BUCKET_NAME in your deployment settings.'
+      });
+    }
 
     // Get the raw body - streaming for large files
     const buffer = await collectStreamData(request);
