@@ -166,7 +166,7 @@ export const AppComments = ({ appId, appName, isAdmin = false }: AppCommentsProp
         className="w-full gap-2 text-sm"
       >
         <MessageCircle className="w-4 h-4" />
-        {showComments ? 'Hide Comments' : `View Comments (${comments.length})`}
+        {showComments ? 'Hide Comments' : `Add Comment or View Comments (${comments.length})`}
       </Button>
 
       {/* Comments Section */}

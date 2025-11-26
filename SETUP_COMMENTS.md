@@ -41,6 +41,17 @@ CREATE POLICY "Anyone can view comments"
 CREATE POLICY "Anyone can post comments"
     ON app_comments FOR INSERT
     WITH CHECK (true);
+
+-- Policy: Admins can delete comments
+CREATE POLICY "Admins can delete comments"
+    ON app_comments FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM user_roles
+            WHERE user_roles.user_id = auth.uid()
+            AND user_roles.role = 'admin'
+        )
+    );
 ```
 
 ## Features
@@ -52,6 +63,7 @@ CREATE POLICY "Anyone can post comments"
 ✅ **Character Limit** - 500 characters with counter
 ✅ **Responsive Design** - Works on all devices
 ✅ **Time Stamps** - Shows "Just now", "5m ago", etc.
+✅ **Admin Moderation** - Admins can delete inappropriate comments with trash icon
 
 ## How It Works
 
