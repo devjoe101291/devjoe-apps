@@ -13,74 +13,58 @@ export const uploadToR2 = async (
   folder: string,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string> => {
-  // Show initial progress
   if (onProgress) {
     onProgress({ loaded: 0, total: file.size, percentage: 0 });
   }
 
+  // Build object key
+  const fileExt = file.name.split('.').pop();
+  const r2FileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
   try {
-    // Send file to serverless function
+    // Step 1: Request presigned PUT URL from backend
     const baseUrl = window.location.origin;
-    const apiUrl = `${baseUrl}/api/upload-to-r2`;
-    
-    const response = await fetch(apiUrl, {
+    const apiUrl = `${baseUrl}/api/upload-to-r2/presign`;
+    const presignRes = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': file.type || 'application/octet-stream',
+        'Content-Type': 'application/json',
       },
-      body: file,
+      body: JSON.stringify({
+        fileName: r2FileName,
+        contentType: file.type || 'application/octet-stream',
+      }),
     });
+    if (!presignRes.ok) {
+      const errData = await presignRes.json();
+      throw new Error(errData.error || 'Failed to get presigned URL');
+    }
+    const { url: presignedUrl, publicUrl } = await presignRes.json();
 
-    if (!response.ok) {
-      const text = await response.text();
-      let errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
-      
-      try {
-        const errorData = JSON.parse(text);
-        if (errorData.message) {
-          errorMessage += `. ${errorData.message}`;
+    // Step 2: PUT upload direct to R2, using XHR for progress
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', presignedUrl, true);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.upload.onprogress = function (evt) {
+        if (evt.lengthComputable && onProgress) {
+          const perc = Math.round((evt.loaded / evt.total) * 100);
+          onProgress({ loaded: evt.loaded, total: evt.total, percentage: perc });
         }
-      } catch {
-        // Response wasn't JSON, likely an HTML error page
-        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-          errorMessage += '. R2 configuration error - please ensure R2 environment variables are set in your deployment settings.';
-        } else {
-          errorMessage += `. ${text.substring(0, 100)}`;
-        }
-      }
-      
-      throw new Error(errorMessage);
-    }
-
-    const result = await response.json();
-
-    // Show completion
-    if (onProgress) {
-      onProgress({ loaded: file.size, total: file.size, percentage: 100 });
-    }
-
-    if (result.success && result.url) {
-      return result.url;
-    } else {
-      throw new Error(result.error || 'Upload failed');
-    }
+      };
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) resolve(null);
+        else reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
+      };
+      xhr.onerror = function () {
+        reject(new Error('Network error uploading file'));
+      };
+      xhr.send(file);
+    });
+    if (onProgress) onProgress({ loaded: file.size, total: file.size, percentage: 100 });
+    return publicUrl;
   } catch (error: any) {
     console.error('R2 upload error:', error);
-    
-    // Provide more specific error messages
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Failed to connect to upload service. Please check your internet connection and try again.');
-    }
-    
-    if (error.message?.includes('404')) {
-      throw new Error('Upload service not found. The serverless function may still be deploying.');
-    }
-    
-    if (error.message?.includes('413')) {
-      throw new Error('File too large. Please compress your file or split it into smaller parts.');
-    }
-    
-    throw new Error(`R2 upload failed: ${error.message || 'Unknown error'}`);
+    throw new Error(error.message || 'Unknown R2 upload error');
   }
 };
 

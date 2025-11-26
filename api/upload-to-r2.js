@@ -1,4 +1,5 @@
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const s3Client = new S3Client({
   region: 'auto',
@@ -17,6 +18,55 @@ function collectStreamData(stream) {
     stream.on('end', () => resolve(Buffer.concat(chunks)));
     stream.on('error', reject);
   });
+}
+
+// Presigned URL endpoint for direct client-side R2 uploads
+async function presignHandler(req, res) {
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { fileName, contentType } = req.body || {};
+    if (!fileName || !contentType) {
+      return res.status(400).json({ error: 'fileName and contentType are required' });
+    }
+    if (!process.env.VITE_R2_ENDPOINT || !process.env.VITE_R2_ACCESS_KEY_ID || !process.env.VITE_R2_SECRET_ACCESS_KEY || !process.env.VITE_R2_BUCKET_NAME) {
+      return res.status(500).json({ error: 'R2 config missing' });
+    }
+    
+    const s3Client = new S3Client({
+      region: 'auto',
+      endpoint: process.env.VITE_R2_ENDPOINT,
+      credentials: {
+        accessKeyId: process.env.VITE_R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.VITE_R2_SECRET_ACCESS_KEY,
+      },
+    });
+    const command = new PutObjectCommand({
+      Bucket: process.env.VITE_R2_BUCKET_NAME,
+      Key: fileName,
+      ContentType: contentType,
+      ACL: undefined // don't set ACL for private buckets
+    });
+    const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 }); // 15 minutes
+
+    const publicUrl = `${process.env.VITE_R2_PUBLIC_URL}/${fileName}`;
+    res.status(200).json({ url: presignedUrl, publicUrl });
+  } catch (error) {
+    console.error("Presign error:", error);
+    res.status(500).json({ error: error.message || 'Failed to presign URL' });
+  }
 }
 
 module.exports = async function handler(request, response) {
@@ -118,4 +168,5 @@ module.exports = async function handler(request, response) {
     });
   }
 };
-;
+
+module.exports.presign = presignHandler;
