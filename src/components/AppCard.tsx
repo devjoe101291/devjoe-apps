@@ -26,8 +26,8 @@ export const AppCard = ({ id, name, description, platform, iconUrl, onDownload, 
   const Icon = config.icon;
 
   return (
-    <Card className="group relative overflow-hidden bg-gradient-to-br from-card to-card/50 border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_hsl(193_95%_55%_/_0.2)] hover:-translate-y-1">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <Card className="group relative overflow-hidden bg-gradient-to-br from-card to-card/50 border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_0_30px_hsl(193_95%_55%_/_0.2)] hover:-translate-y-2 hover:scale-[1.02]">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       <div className="relative p-4 sm:p-6 space-y-3 sm:space-y-4">
         <div className="flex items-start justify-between gap-3 sm:gap-4">
