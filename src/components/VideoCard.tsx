@@ -15,7 +15,7 @@ export const VideoCard = ({ title, description, videoUrl, thumbnailUrl }: VideoC
   console.log('VideoCard - Vimeo match:', vimeoMatch);
   
   return (
-    <div className="group relative bg-gradient-to-br from-card to-card/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_hsl(193_95%_55%_/_0.2)] rounded-lg overflow-hidden">
+    <div className="group relative bg-gradient-to-br from-card to-card/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_hsl(45_100%_55%_/_0.2)] rounded-lg overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
       <div className="relative aspect-video overflow-hidden bg-black">
