@@ -518,47 +518,75 @@ const Admin = () => {
         </div>
       </header>
 
-      {/* R2 Storage Warning Banner */}
-      {showStorageWarning && (
-        <div className={`animate-in slide-in-from-top ${
-          storageCritical 
-            ? 'bg-destructive/90 text-destructive-foreground'
-            : 'bg-yellow-500/90 text-yellow-950'
-        } border-b-2 ${
-          storageCritical
-            ? 'border-destructive'
-            : 'border-yellow-600'
-        }`}>
-          <div className="container mx-auto px-4 sm:px-6 py-3">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+      {/* R2 Storage Status Banner - Always Visible */}
+      <div className={`border-b ${
+        storageCritical 
+          ? 'bg-destructive/90 text-destructive-foreground border-destructive'
+          : storagePercentage >= 80
+          ? 'bg-yellow-500/90 text-yellow-950 border-yellow-600'
+          : 'bg-primary/10 text-foreground border-primary/20'
+      }`}>
+        <div className="container mx-auto px-4 sm:px-6 py-2.5">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3 flex-1">
+              {storagePercentage >= 80 && (
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <div className="flex-1">
-                  <p className="font-bold text-sm sm:text-base">
-                    {storageCritical ? '⚠️ Critical: ' : '⚠️ Warning: '}R2 Storage {storageCritical ? 'Almost Full!' : 'Getting Full'}
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-xs sm:text-sm">
+                    💾 R2 Storage: {(r2StorageUsed / 1024 / 1024 / 1024).toFixed(2)} GB / 10 GB
                   </p>
-                  <p className="text-xs sm:text-sm opacity-90">
-                    Using {(r2StorageUsed / 1024 / 1024 / 1024).toFixed(2)} GB of 10 GB free tier ({storagePercentage.toFixed(1)}%) - 
-                    {storageCritical 
-                      ? ' Delete old videos immediately or upgrade your plan!'
-                      : ' Consider deleting old videos or upgrading to avoid upload failures.'}
-                  </p>
+                  <div className="flex-1 min-w-[100px] max-w-[200px]">
+                    <div className="h-2 bg-black/20 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-500 ${
+                          storageCritical 
+                            ? 'bg-white'
+                            : storagePercentage >= 80 
+                            ? 'bg-yellow-900' 
+                            : 'bg-primary'
+                        }`}
+                        style={{ width: `${Math.min(storagePercentage, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className={`text-xs font-bold ${
+                    storageCritical 
+                      ? 'animate-pulse'
+                      : ''
+                  }`}>
+                    {storagePercentage.toFixed(1)}%
+                  </span>
                 </div>
+                {storagePercentage >= 80 && (
+                  <p className="text-xs opacity-90 mt-1">
+                    {storageCritical 
+                      ? '🚨 Critical! Delete videos now or upgrade immediately!'
+                      : '⚠️ Warning: Storage getting full. Consider deleting old videos.'}
+                  </p>
+                )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className={storageCritical ? 'bg-white text-destructive hover:bg-white/90' : 'bg-white text-yellow-900 hover:bg-white/90'}
-                onClick={() => window.open('https://dash.cloudflare.com/', '_blank')}
-              >
-                View in Cloudflare
-              </Button>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className={`text-xs flex-shrink-0 ${
+                storageCritical 
+                  ? 'bg-white text-destructive hover:bg-white/90 border-white'
+                  : storagePercentage >= 80
+                  ? 'bg-white text-yellow-900 hover:bg-white/90 border-white'
+                  : 'bg-primary/20 hover:bg-primary/30'
+              }`}
+              onClick={() => window.open('https://dash.cloudflare.com/', '_blank')}
+            >
+              View in Cloudflare
+            </Button>
           </div>
         </div>
-      )}
+      </div>
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
         {/* Tabs */}

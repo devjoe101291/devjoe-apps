@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AppCard } from "@/components/AppCard";
-import { YouTubeVideo } from "@/components/YouTubeVideo";
+import { VideoCard } from "@/components/VideoCard";
 import { Button } from "@/components/ui/button";
 import { Code2, Sparkles, Lock, Download, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -236,66 +236,16 @@ const Index = () => {
               <div className="text-center text-muted-foreground col-span-full">Loading videos...</div>
             ) : videos.length === 0 ? (
               <div className="text-center text-muted-foreground col-span-full">No videos yet.</div>
-            ) : videos.map((video, idx) => {
-              // Determine type (YouTube, Vimeo, or file)
-              const url = video.video_url || "";
-              const ytMatch = url.match(/(?:youtube.com\/(?:embed\/|watch\?v=)|youtu.be\/)([\w-]+)/);
-              const vimeoMatch = url.match(/(?:vimeo.com\/(\d+))/);
-              return (
-                <div className="animate-fade-in" style={{ animationDelay: `${0.2 + idx * 0.15}s` }} key={video.id}>
-                  {/* YouTube Embed */}
-                  {ytMatch ? (
-                    <YouTubeVideo title={video.title} description={video.description} videoId={ytMatch[1]} />
-                  ) : vimeoMatch ? (
-                    <div className="aspect-video relative">
-                      <iframe
-                        src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
-                        title={video.title}
-                        className="w-full h-full object-cover rounded-lg border"
-                        frameBorder="0"
-                        allow="autoplay; fullscreen; picture-in-picture"
-                        allowFullScreen
-                      />
-                      <div className="p-4 bg-card/80 rounded-b-lg">
-                        <h3 className="font-bold text-lg mb-1">{video.title}</h3>
-                        <p className="text-muted-foreground text-sm">{video.description}</p>
-                      </div>
-                    </div>
-                  ) : url ? (
-                    // Modern HTML5 Video Player with smooth styling
-                    <div className="group relative bg-gradient-to-br from-card to-card/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_hsl(193_95%_55%_/_0.2)] rounded-lg overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      
-                      <div className="relative aspect-video overflow-hidden bg-black">
-                        <video 
-                          controls 
-                          poster={video.thumbnail_url || undefined} 
-                          className="w-full h-full object-contain"
-                          playsInline
-                          preload="metadata"
-                          controlsList="nodownload"
-                        >
-                          <source src={video.video_url} type="video/mp4" />
-                          <source src={video.video_url} type="video/webm" />
-                          Your browser does not support the video tag.
-                        </video>
-                      </div>
-
-                      <div className="relative p-4 sm:p-6 space-y-2">
-                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                          {video.title}
-                        </h3>
-                        <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed line-clamp-2">
-                          {video.description}
-                        </p>
-                      </div>
-
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
+            ) : videos.map((video, idx) => (
+              <div className="animate-fade-in" style={{ animationDelay: `${0.2 + idx * 0.15}s` }} key={video.id}>
+                <VideoCard
+                  title={video.title}
+                  description={video.description}
+                  videoUrl={video.video_url}
+                  thumbnailUrl={video.thumbnail_url}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </section>
