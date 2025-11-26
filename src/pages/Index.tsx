@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ReactPlayer from "react-player";
 
 interface App {
   id: string;
@@ -262,13 +263,27 @@ const Index = () => {
                       </div>
                     </div>
                   ) : url ? (
-                    // Native file upload
-                    <div className="aspect-video relative">
-                      <video controls poster={video.thumbnail_url || undefined} className="w-full h-full object-cover rounded-lg border">
-                        <source src={video.video_url} />
-                        Your browser does not support the video tag.
-                      </video>
-                      <div className="p-4 bg-card/80 rounded-b-lg">
+                    // Native file upload - use ReactPlayer for better compatibility
+                    <div className="bg-card/80 rounded-lg overflow-hidden">
+                      <div className="aspect-video relative bg-black">
+                        <ReactPlayer
+                          url={video.video_url}
+                          controls
+                          width="100%"
+                          height="100%"
+                          light={video.thumbnail_url || false}
+                          playing={false}
+                          config={{
+                            file: {
+                              attributes: {
+                                controlsList: 'nodownload',
+                                preload: 'metadata'
+                              }
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="p-4">
                         <h3 className="font-bold text-lg mb-1">{video.title}</h3>
                         <p className="text-muted-foreground text-sm">{video.description}</p>
                       </div>
