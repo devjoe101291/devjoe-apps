@@ -374,9 +374,11 @@ const Admin = () => {
 
         // Check if R2 is configured for large files
         const isLargeFile = videoFile.size > 50 * 1024 * 1024; // 50MB+
-        if (isLargeFile && !isR2Configured()) {
+        const r2Available = isR2Configured();
+        console.log('R2 Configuration Check:', { isLargeFile, r2Available });
+        if (isLargeFile && !r2Available) {
           throw new Error(
-            `Video size is ${formatFileSize(videoFile.size)}. Large file uploads require Cloudflare R2 configuration.`
+            `Video size is ${formatFileSize(videoFile.size)}. Large file uploads require Cloudflare R2 configuration. Please check environment variables.`
           );
         }
         // Upload thumbnail (if any)
