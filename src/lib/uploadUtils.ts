@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { uploadToR2, uploadToR2Multipart, isR2Configured as checkR2Config } from "./r2Upload";
+import { uploadToR2Direct, isR2Configured as checkR2Config } from "./r2DirectUpload";
 
 export { checkR2Config as isR2Configured };
 
@@ -37,14 +37,10 @@ export const uploadFileChunked = async (
   const isLargeFile = file.size >= MAX_FILE_SIZE_SUPABASE;
   const r2Available = checkR2Config();
 
-  // Use R2 multipart upload for large files (no CORS issues!)
+  // Use R2 direct upload for large files (faster and no CORS issues!)
   if (isLargeFile && r2Available) {
-    // Use multipart upload for files larger than threshold
-    if (file.size > MULTIPART_THRESHOLD) {
-      return await uploadToR2Multipart(file, folder, onProgress);
-    }
-    // Use regular upload for medium-sized files
-    return await uploadToR2(file, folder, onProgress);
+    console.log('Using R2 direct upload for large file');
+    return await uploadToR2Direct(file, folder, onProgress);
   }
 
   // Use Supabase for small files

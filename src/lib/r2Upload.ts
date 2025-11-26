@@ -294,17 +294,24 @@ const abortMultipartUpload = async (
 };
 
 /**
- * Check if R2 is configured
+ * Get R2 configuration
  */
-export const isR2Configured = (): boolean => {
+const getR2Config = () => {
   // @ts-ignore - import.meta.env is available in Vite
-  const config = {
+  return {
     endpoint: import.meta.env.VITE_R2_ENDPOINT,
     accessKeyId: import.meta.env.VITE_R2_ACCESS_KEY_ID,
     secretAccessKey: import.meta.env.VITE_R2_SECRET_ACCESS_KEY,
     bucketName: import.meta.env.VITE_R2_BUCKET_NAME,
     publicUrl: import.meta.env.VITE_R2_PUBLIC_URL,
   };
+};
+
+/**
+ * Check if R2 is configured
+ */
+export const isR2Configured = (): boolean => {
+  const config = getR2Config();
   
   console.log('R2 Environment Variables Check:', {
     hasEndpoint: !!config.endpoint,
@@ -322,4 +329,20 @@ export const isR2Configured = (): boolean => {
     config.bucketName &&
     config.publicUrl
   );
+};
+
+/**
+ * Create S3 client for R2
+ */
+const createS3Client = () => {
+  const config = getR2Config();
+  
+  return new S3Client({
+    region: 'auto',
+    endpoint: config.endpoint,
+    credentials: {
+      accessKeyId: config.accessKeyId!,
+      secretAccessKey: config.secretAccessKey!,
+    },
+  });
 };
