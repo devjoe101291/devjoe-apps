@@ -10,7 +10,7 @@
     }
   ],
   "functions": {
-    "api/upload-to-r2.ts": {
+    "api/upload-to-r2.js": {
       "maxDuration": 60,
       "memory": 3008
     }
