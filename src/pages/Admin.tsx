@@ -25,15 +25,6 @@ interface App {
   download_count?: number;
 }
 
-interface Video {
-  id: string;
-  title: string;
-  description: string;
-  video_url: string;
-  thumbnail_url?: string;
-  view_count?: number;
-}
-
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -55,13 +46,13 @@ const Admin = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Video management states
-  const [videos, setVideos] = useState<Video[]>([]);
+  // --- state for new video form ---
   const [videoTitle, setVideoTitle] = useState("");
   const [videoDescription, setVideoDescription] = useState("");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState<"apps" | "videos">("apps");
+  const [videoInputType, setVideoInputType] = useState<'file' | 'link'>('file');
+  const [videoLink, setVideoLink] = useState("");
 
   useEffect(() => {
     checkAuth();
@@ -365,6 +356,7 @@ To upload this file, please:
     setIsUploading(false);
   };
 
+  // In handleVideoSubmit, support both file and link submissions
   const handleVideoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -374,97 +366,74 @@ To upload this file, please:
     try {
       let thumbnailUrl = null;
       let videoUrl = null;
-
-      // Validate files
-      if (thumbnailFile) {
-        const validation = validateFile(thumbnailFile, 10 * 1024 * 1024, [
-          "image/jpeg",
-          "image/png",
-          "image/webp",
+      // --- handle file ---
+      if (videoInputType === 'file') {
+        if (!videoFile) {
+          throw new Error("Please select a video file to upload.");
+        }
+        const validation = validateFile(videoFile, 500 * 1024 * 1024, [
+          "video/mp4",
+          "video/webm",
+          "video/quicktime",
         ]);
         if (!validation.valid) {
           throw new Error(validation.error);
         }
-      }
-
-      if (!videoFile) {
-        throw new Error("Please select a video file to upload.");
-      }
-
-      const validation = validateFile(videoFile, 500 * 1024 * 1024, [
-        "video/mp4",
-        "video/webm",
-        "video/quicktime",
-      ]);
-      if (!validation.valid) {
-        throw new Error(validation.error);
-      }
-
-      // Upload thumbnail
-      if (thumbnailFile) {
-        toast({
-          title: "Uploading thumbnail...",
-          description: `Size: ${formatFileSize(thumbnailFile.size)}`,
-        });
-        thumbnailUrl = await uploadImage(
-          thumbnailFile,
-          "video-thumbnails",
-          "thumbnails",
+        // Upload thumbnail (if any)
+        if (thumbnailFile) {
+          toast({ title: "Uploading thumbnail...", description: `Size: ${formatFileSize(thumbnailFile.size)}` });
+          thumbnailUrl = await uploadImage(
+            thumbnailFile,
+            "video-thumbnails",
+            "thumbnails",
+            (progress) => setUploadProgress(Math.round(progress.percentage / 4))
+          );
+        }
+        toast({ title: "Uploading video...", description: `Size: ${formatFileSize(videoFile.size)}. Using optimized chunked upload for faster transfer.` });
+        videoUrl = await uploadFileChunked(
+          videoFile,
+          "videos",
+          "uploads",
           (progress) => {
-            setUploadProgress(Math.round(progress.percentage / 4)); // 0-25%
+            const baseProgress = thumbnailFile ? 25 : 0;
+            const videoProgress = thumbnailFile ? (progress.percentage * 75) / 100 : progress.percentage;
+            setUploadProgress(Math.round(baseProgress + videoProgress));
           }
         );
-      }
-
-      // Upload video with chunked upload
-      toast({
-        title: "Uploading video...",
-        description: `Size: ${formatFileSize(videoFile.size)}. Using optimized chunked upload for faster transfer.`,
-      });
-      videoUrl = await uploadFileChunked(
-        videoFile,
-        "videos",
-        "uploads",
-        (progress) => {
-          const baseProgress = thumbnailFile ? 25 : 0;
-          const videoProgress = thumbnailFile
-            ? (progress.percentage * 75) / 100
-            : progress.percentage;
-          setUploadProgress(Math.round(baseProgress + videoProgress));
+        setUploadProgress(100);
+      } else {
+        // --- handle link ---
+        if (!videoLink.trim()) {
+          throw new Error("Please provide a YouTube or Vimeo link.");
         }
-      );
-
-      setUploadProgress(100);
-
-      const { error } = await supabase.from("videos" as any).insert({
+        videoUrl = videoLink.trim();
+        // handle optional thumbnail upload
+        if (thumbnailFile) {
+          toast({ title: "Uploading thumbnail...", description: `Size: ${formatFileSize(thumbnailFile.size)}` });
+          thumbnailUrl = await uploadImage(
+            thumbnailFile,
+            "video-thumbnails",
+            "thumbnails",
+            (progress) => setUploadProgress(Math.round(progress.percentage))
+          );
+        }
+        setUploadProgress(100);
+      }
+      const { error } = await supabase.from("videos").insert({
         title: videoTitle,
         description: videoDescription,
         video_url: videoUrl,
         thumbnail_url: thumbnailUrl,
       });
-
       if (error) throw error;
-
-      toast({
-        title: "Success!",
-        description: "Video added successfully.",
-      });
-
-      setVideoTitle("");
-      setVideoDescription("");
-      setVideoFile(null);
-      setThumbnailFile(null);
+      toast({ title: "Success!", description: "Video added successfully." });
+      setVideoTitle(""); setVideoDescription(""); setVideoFile(null); setVideoLink(""); setThumbnailFile(null);
       setUploadProgress(0);
       fetchVideos();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add video. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to add video. Please try again.", variant: "destructive" });
       setUploadProgress(0);
     }
-
     setLoading(false);
     setIsUploading(false);
   };
@@ -669,7 +638,30 @@ To upload this file, please:
                       placeholder="Inspirational Message"
                     />
                   </div>
-
+                  <div className="space-y-2">
+                    {/* Radio toggle for upload/link */}
+                    <Label>Source Type</Label>
+                    <div className="flex items-center gap-4 mt-1">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          checked={videoInputType === 'file'}
+                          onChange={() => setVideoInputType('file')}
+                        />
+                        File Upload
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          checked={videoInputType === 'link'}
+                          onChange={() => setVideoInputType('link')}
+                        />
+                        YouTube/Vimeo Link
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                {videoInputType === 'file' ? (
                   <div className="space-y-2">
                     <Label htmlFor="video-file">Video File (MP4/WebM)</Label>
                     <Input
@@ -677,11 +669,22 @@ To upload this file, please:
                       type="file"
                       accept="video/mp4,video/webm,video/quicktime"
                       onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                      required
+                      required={videoInputType === 'file'}
                     />
                   </div>
-                </div>
-
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="video-link">YouTube or Vimeo Link</Label>
+                    <Input
+                      id="video-link"
+                      type="url"
+                      value={videoLink}
+                      onChange={(e) => setVideoLink(e.target.value)}
+                      required={videoInputType === 'link'}
+                      placeholder="https://www.youtube.com/watch?v=xxxxxx or https://vimeo.com/xxxxxx"
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="video-description">Description</Label>
                   <Textarea
@@ -693,7 +696,6 @@ To upload this file, please:
                     rows={4}
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="thumbnail">Thumbnail Image (optional)</Label>
                   <Input
@@ -704,7 +706,6 @@ To upload this file, please:
                   />
                   <p className="text-sm text-muted-foreground">Recommended: 1280x720px (16:9 aspect ratio)</p>
                 </div>
-
                 {/* Upload Progress */}
                 {isUploading && (
                   <div className="space-y-2">
@@ -715,7 +716,6 @@ To upload this file, please:
                     <Progress value={uploadProgress} className="h-2" />
                   </div>
                 )}
-
                 <Button
                   type="submit"
                   className="w-full bg-primary hover:bg-primary/90"

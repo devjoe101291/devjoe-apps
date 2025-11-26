@@ -24,8 +24,13 @@ const Index = () => {
   const [apps, setApps] = useState<App[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // --- Add: video gallery state & fetch ---
+  const [videos, setVideos] = useState<any[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(true);
+
   useEffect(() => {
     fetchApps();
+    fetchVideos();
   }, []);
 
   const fetchApps = async () => {
@@ -37,6 +42,16 @@ const Index = () => {
 
     setApps((data as App[]) || []);
     setLoading(false);
+  };
+
+  const fetchVideos = async () => {
+    setLoadingVideos(true);
+    const { data, error } = await supabase
+      .from("videos")
+      .select("*")
+      .order("created_at", { ascending: false });
+    setVideos((data as any[]) || []);
+    setLoadingVideos(false);
   };
 
   const handleDownload = async (app: App) => {
@@ -216,30 +231,52 @@ const Index = () => {
               Uplifting messages and teachings to strengthen your faith
             </p>
           </div>
-
-          {/* YouTube Videos */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-fade-in">
-            <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <YouTubeVideo 
-                title="The Sovereignty of God"
-                description="A powerful message on God's ultimate control over all circumstances."
-                videoId="JHdB1dYAteA"
-              />
-            </div>
-            <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
-              <YouTubeVideo 
-                title="The Gospel Truth"
-                description="Understanding the true message of salvation through Jesus Christ."
-                videoId="qkmGhZY1FBQ"
-              />
-            </div>
-            <div className="animate-fade-in" style={{ animationDelay: '0.6s' }}>
-              <YouTubeVideo 
-                title="Faith That Works"
-                description="Exploring the relationship between faith and works in the Christian life."
-                videoId="9jYtODX22ZY"
-              />
-            </div>
+            {loadingVideos ? (
+              <div className="text-center text-muted-foreground col-span-full">Loading videos...</div>
+            ) : videos.length === 0 ? (
+              <div className="text-center text-muted-foreground col-span-full">No videos yet.</div>
+            ) : videos.map((video, idx) => {
+              // Determine type (YouTube, Vimeo, or file)
+              const url = video.video_url || "";
+              const ytMatch = url.match(/(?:youtube.com\/(?:embed\/|watch\?v=)|youtu.be\/)([\w-]+)/);
+              const vimeoMatch = url.match(/(?:vimeo.com\/(\d+))/);
+              return (
+                <div className="animate-fade-in" style={{ animationDelay: `${0.2 + idx * 0.15}s` }} key={video.id}>
+                  {/* YouTube Embed */}
+                  {ytMatch ? (
+                    <YouTubeVideo title={video.title} description={video.description} videoId={ytMatch[1]} />
+                  ) : vimeoMatch ? (
+                    <div className="aspect-video relative">
+                      <iframe
+                        src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+                        title={video.title}
+                        className="w-full h-full object-cover rounded-lg border"
+                        frameBorder="0"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                      />
+                      <div className="p-4 bg-card/80 rounded-b-lg">
+                        <h3 className="font-bold text-lg mb-1">{video.title}</h3>
+                        <p className="text-muted-foreground text-sm">{video.description}</p>
+                      </div>
+                    </div>
+                  ) : url ? (
+                    // Native file upload
+                    <div className="aspect-video relative">
+                      <video controls poster={video.thumbnail_url || undefined} className="w-full h-full object-cover rounded-lg border">
+                        <source src={video.video_url} />
+                        Your browser does not support the video tag.
+                      </video>
+                      <div className="p-4 bg-card/80 rounded-b-lg">
+                        <h3 className="font-bold text-lg mb-1">{video.title}</h3>
+                        <p className="text-muted-foreground text-sm">{video.description}</p>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
