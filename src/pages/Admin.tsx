@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LogOut, Plus, Trash2, Upload, Home, Edit, Video, Play } from "lucide-react";
 import { AppCard } from "@/components/AppCard";
+import { VisitorStats } from "@/components/VisitorStats";
 import { uploadFileChunked, uploadImage, formatFileSize, validateFile, isR2Configured } from "@/lib/uploadUtils";
 import { Progress } from "@/components/ui/progress";
 import type { User } from "@supabase/supabase-js";
@@ -61,7 +62,7 @@ const Admin = () => {
   const [videoInputType, setVideoInputType] = useState<'file' | 'link'>('file');
   const [videoLink, setVideoLink] = useState("");
   const [videos, setVideos] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"apps" | "videos">("apps");
+  const [activeTab, setActiveTab] = useState<"apps" | "videos" | "visitors">("apps");
 
   useEffect(() => {
     checkAuth();
@@ -607,7 +608,18 @@ const Admin = () => {
             <Video className="w-4 h-4" />
             Videos
           </Button>
+          <Button
+            variant={activeTab === "visitors" ? "default" : "ghost"}
+            onClick={() => setActiveTab("visitors")}
+            className="gap-2"
+          >
+            <Home className="w-4 h-4" />
+            Visitors
+          </Button>
         </div>
+
+        {/* Visitor Stats Section */}
+        {activeTab === "visitors" && <VisitorStats />}
 
         {/* Apps Section */}
         {activeTab === "apps" && (

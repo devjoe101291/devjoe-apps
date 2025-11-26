@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useVisitorTracking } from "@/hooks/useVisitorTracking";
 
 interface App {
   id: string;
@@ -23,6 +24,9 @@ const Index = () => {
   const { toast } = useToast();
   const [apps, setApps] = useState<App[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Track visitor
+  useVisitorTracking();
 
   // --- Add: video gallery state & fetch ---
   const [videos, setVideos] = useState<any[]>([]);
