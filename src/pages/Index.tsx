@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AppCard } from "@/components/AppCard";
-import { VideoCard } from "@/components/VideoCard";
+import { YouTubeVideo } from "@/components/YouTubeVideo";
 import { Button } from "@/components/ui/button";
 import { Code2, Sparkles, Lock, Download, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -18,25 +18,14 @@ interface App {
   download_count?: number;
 }
 
-interface Video {
-  id: string;
-  title: string;
-  description: string;
-  video_url: string;
-  thumbnail_url?: string;
-  view_count?: number;
-}
-
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [apps, setApps] = useState<App[]>([]);
-  const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchApps();
-    fetchVideos();
   }, []);
 
   const fetchApps = async () => {
@@ -48,26 +37,6 @@ const Index = () => {
 
     setApps((data as App[]) || []);
     setLoading(false);
-  };
-
-  const fetchVideos = async () => {
-    const { data } = await supabase
-      .from("videos")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    setVideos((data as Video[]) || []);
-  };
-
-  const handleVideoView = async (videoId: string) => {
-    const video = videos.find(v => v.id === videoId);
-    if (video) {
-      await supabase
-        .from('videos')
-        .update({ view_count: (video.view_count || 0) + 1 })
-        .eq('id', videoId);
-      fetchVideos();
-    }
   };
 
   const handleDownload = async (app: App) => {
@@ -230,7 +199,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Video Gallery Section */}
+      {/* YouTube Video Gallery Section */}
       <section className="py-12 sm:py-24 px-4 sm:px-6 bg-secondary/20">
         <div className="container mx-auto">
           <div className="text-center space-y-2 sm:space-y-4 mb-8 sm:mb-16 animate-fade-in">
@@ -248,25 +217,30 @@ const Index = () => {
             </p>
           </div>
 
-          {videos.length === 0 ? (
-            <div className="text-center text-muted-foreground">
-              No videos yet. Stay tuned for inspiring content!
+          {/* YouTube Videos */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-fade-in">
+            <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <YouTubeVideo 
+                title="The Sovereignty of God"
+                description="A powerful message on God's ultimate control over all circumstances."
+                videoId="JHdB1dYAteA"
+              />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-fade-in">
-              {videos.map((video, index) => (
-                <div key={video.id} style={{ animationDelay: `${0.2 + index * 0.1}s` }} className="animate-fade-in">
-                  <VideoCard 
-                    {...video} 
-                    videoUrl={video.video_url}
-                    thumbnailUrl={video.thumbnail_url}
-                    viewCount={video.view_count}
-                    onView={() => handleVideoView(video.id)}
-                  />
-                </div>
-              ))}
+            <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+              <YouTubeVideo 
+                title="The Gospel Truth"
+                description="Understanding the true message of salvation through Jesus Christ."
+                videoId="qkmGhZY1FBQ"
+              />
             </div>
-          )}
+            <div className="animate-fade-in" style={{ animationDelay: '0.6s' }}>
+              <YouTubeVideo 
+                title="Faith That Works"
+                description="Exploring the relationship between faith and works in the Christian life."
+                videoId="9jYtODX22ZY"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
