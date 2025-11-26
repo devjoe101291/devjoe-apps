@@ -1,10 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
-import { uploadToR2, isR2Configured as checkR2Config } from "./r2Upload";
+import { uploadToR2, uploadToR2Multipart, isR2Configured as checkR2Config } from "./r2Upload";
 
 export { checkR2Config as isR2Configured };
 
 const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks for optimal upload speed
 const MAX_CONCURRENT_CHUNKS = 3; // Upload 3 chunks in parallel
+
+// File size limits
+const MAX_FILE_SIZE_SUPABASE = 50 * 1024 * 1024; // 50MB for Supabase free tier
+const MAX_FILE_SIZE_R2 = 500 * 1024 * 1024; // 500MB for R2
+const MULTIPART_THRESHOLD = 10 * 1024 * 1024; // 10MB - use multipart for larger files
 
 interface UploadProgress {
   loaded: number;
@@ -22,19 +27,28 @@ export const uploadFileChunked = async (
   folder: string,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<string> => {
+  // Validate file before upload
+  const validation = validateFile(file);
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+
   // Check if file is large
-  const SUPABASE_LIMIT = 50 * 1024 * 1024; // 50MB
-  const isLargeFile = file.size >= SUPABASE_LIMIT;
+  const isLargeFile = file.size >= MAX_FILE_SIZE_SUPABASE;
   const r2Available = checkR2Config();
 
-  // Use R2 serverless function for large files (no CORS issues!)
+  // Use R2 multipart upload for large files (no CORS issues!)
   if (isLargeFile && r2Available) {
+    // Use multipart upload for files larger than threshold
+    if (file.size > MULTIPART_THRESHOLD) {
+      return await uploadToR2Multipart(file, folder, onProgress);
+    }
+    // Use regular upload for medium-sized files
     return await uploadToR2(file, folder, onProgress);
   }
 
   // Use Supabase for small files
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for Supabase free tier
-  if (file.size > MAX_FILE_SIZE && !r2Available) {
+  if (file.size > MAX_FILE_SIZE_SUPABASE && !r2Available) {
     throw new Error(
       `File size is ${formatFileSize(file.size)}. Supabase free tier has a 50MB upload limit per file.\n\nTo upload larger files, please configure Cloudflare R2 (free 10GB storage) or upgrade to Supabase Pro ($25/month) for up to 5GB per file.`
     );
@@ -271,21 +285,16 @@ export const formatFileSize = (bytes: number): string => {
  * Validate file before upload
  */
 export const validateFile = (
-  file: File,
-  maxSize: number,
-  allowedTypes: string[]
+  file: File
 ): { valid: boolean; error?: string } => {
+  // Check if R2 is configured
+  const r2Available = checkR2Config();
+  const maxSize = r2Available ? MAX_FILE_SIZE_R2 : MAX_FILE_SIZE_SUPABASE;
+  
   if (file.size > maxSize) {
     return {
       valid: false,
       error: `File size exceeds maximum of ${formatFileSize(maxSize)}. Current size: ${formatFileSize(file.size)}`,
-    };
-  }
-
-  if (!allowedTypes.includes(file.type)) {
-    return {
-      valid: false,
-      error: `Invalid file type. Allowed types: ${allowedTypes.join(", ")}`,
     };
   }
 

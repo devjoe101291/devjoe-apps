@@ -81,6 +81,12 @@ module.exports = async function handler(request, response) {
     return;
   }
 
+  // Route to presign handler if the URL path ends with /presign
+  if (request.url && request.url.includes('/presign')) {
+    return presignHandler(request, response);
+  }
+
+  // Default: Direct upload to R2 (for backward compatibility)
   if (request.method !== 'POST') {
     return response.status(405).json({ error: 'Method not allowed' });
   }
