@@ -36,12 +36,18 @@ module.exports = async function handler(request, response) {
   }
 
   try {
-    // Get the raw body
+    console.log('Starting R2 upload...');
+    console.log('Content-Type:', request.headers['content-type']);
+    console.log('Content-Length:', request.headers['content-length']);
+
+    // Get the raw body - streaming for large files
     const buffer = await collectStreamData(request);
 
     if (!buffer || buffer.length === 0) {
       return response.status(400).json({ error: 'No file data received' });
     }
+
+    console.log('Received file size:', buffer.length, 'bytes');
 
     // Generate unique filename
     const timestamp = Date.now();

@@ -53,6 +53,8 @@ const Admin = () => {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [videoInputType, setVideoInputType] = useState<'file' | 'link'>('file');
   const [videoLink, setVideoLink] = useState("");
+  const [videos, setVideos] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"apps" | "videos">("apps");
 
   useEffect(() => {
     checkAuth();
@@ -161,22 +163,6 @@ const Admin = () => {
       }
 
       if (appFile) {
-        // Check file size - Supabase free tier limit is 50MB
-        const MAX_SIZE = 50 * 1024 * 1024;
-        
-        if (appFile.size > MAX_SIZE) {
-          throw new Error(
-            `File size is ${formatFileSize(appFile.size)}. Supabase free tier has a 50MB upload limit.
-
-To upload this file, please:
-
-1. Compress your APK using ProGuard/R8 in Android Studio
-2. Use Android App Bundle (.aab) instead of APK
-3. Remove unused resources and libraries
-4. Or upgrade to Supabase Pro ($25/month)`
-          );
-        }
-
         // Check file extension (more reliable than MIME type for APK files)
         const fileName = appFile.name.toLowerCase();
         const validExtensions = ['.apk', '.exe', '.zip', '.msi', '.rar'];
@@ -184,6 +170,14 @@ To upload this file, please:
         
         if (!hasValidExtension) {
           throw new Error(`Invalid file type. Please upload: ${validExtensions.join(', ')}`);
+        }
+
+        // Check if R2 is configured for large files
+        const isLargeFile = appFile.size > 50 * 1024 * 1024; // 50MB+
+        if (isLargeFile && !isR2Configured()) {
+          throw new Error(
+            `File size is ${formatFileSize(appFile.size)}. Large file uploads require Cloudflare R2 configuration. Please configure R2 credentials in your environment variables.`
+          );
         }
       }
 
@@ -371,13 +365,19 @@ To upload this file, please:
         if (!videoFile) {
           throw new Error("Please select a video file to upload.");
         }
-        const validation = validateFile(videoFile, 500 * 1024 * 1024, [
-          "video/mp4",
-          "video/webm",
-          "video/quicktime",
-        ]);
-        if (!validation.valid) {
-          throw new Error(validation.error);
+        
+        // Validate video file type
+        const validVideoTypes = ["video/mp4", "video/webm", "video/quicktime"];
+        if (!validVideoTypes.includes(videoFile.type)) {
+          throw new Error(`Invalid video format. Supported: MP4, WebM, MOV`);
+        }
+
+        // Check if R2 is configured for large files
+        const isLargeFile = videoFile.size > 50 * 1024 * 1024; // 50MB+
+        if (isLargeFile && !isR2Configured()) {
+          throw new Error(
+            `Video size is ${formatFileSize(videoFile.size)}. Large file uploads require Cloudflare R2 configuration.`
+          );
         }
         // Upload thumbnail (if any)
         if (thumbnailFile) {
@@ -419,12 +419,12 @@ To upload this file, please:
         }
         setUploadProgress(100);
       }
-      const { error } = await supabase.from("videos").insert({
+      const { error } = await supabase.from("videos" as any).insert({
         title: videoTitle,
         description: videoDescription,
         video_url: videoUrl,
         thumbnail_url: thumbnailUrl,
-      });
+      } as any);
       if (error) throw error;
       toast({ title: "Success!", description: "Video added successfully." });
       setVideoTitle(""); setVideoDescription(""); setVideoFile(null); setVideoLink(""); setThumbnailFile(null);

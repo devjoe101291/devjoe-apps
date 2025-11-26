@@ -47,7 +47,7 @@ const Index = () => {
   const fetchVideos = async () => {
     setLoadingVideos(true);
     const { data, error } = await supabase
-      .from("videos")
+      .from("videos" as any)
       .select("*")
       .order("created_at", { ascending: false });
     setVideos((data as any[]) || []);
