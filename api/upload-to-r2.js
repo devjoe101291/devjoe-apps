@@ -9,6 +9,16 @@ const s3Client = new S3Client({
   },
 });
 
+// Helper function to collect stream data
+function collectStreamData(stream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+    stream.on('error', reject);
+  });
+}
+
 module.exports = async function handler(request, response) {
   // Enable CORS
   response.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -27,55 +37,38 @@ module.exports = async function handler(request, response) {
 
   try {
     // Get the raw body
-    const chunks = [];
-    
-    // Handle stream data
-    request.on('data', (chunk) => {
-      chunks.push(chunk);
+    const buffer = await collectStreamData(request);
+
+    if (!buffer || buffer.length === 0) {
+      return response.status(400).json({ error: 'No file data received' });
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(7);
+    const contentType = request.headers['content-type'] || 'application/octet-stream';
+    const extension = contentType.includes('apk') ? 'apk' : 
+                     contentType.includes('exe') ? 'exe' :
+                     contentType.includes('zip') ? 'zip' : 'bin';
+    const fileName = `apps/${timestamp}_${random}.${extension}`;
+
+    // Upload to R2
+    const command = new PutObjectCommand({
+      Bucket: process.env.VITE_R2_BUCKET_NAME,
+      Key: fileName,
+      Body: buffer,
+      ContentType: contentType,
     });
-    
-    request.on('end', async () => {
-      const buffer = Buffer.concat(chunks);
 
-      if (!buffer || buffer.length === 0) {
-        return response.status(400).json({ error: 'No file data received' });
-      }
+    await s3Client.send(command);
 
-      // Generate unique filename
-      const timestamp = Date.now();
-      const random = Math.random().toString(36).substring(7);
-      const contentType = request.headers['content-type'] || 'application/octet-stream';
-      const extension = contentType.includes('apk') ? 'apk' : 
-                       contentType.includes('exe') ? 'exe' :
-                       contentType.includes('zip') ? 'zip' : 'bin';
-      const fileName = `apps/${timestamp}_${random}.${extension}`;
+    // Return public URL
+    const publicUrl = `${process.env.VITE_R2_PUBLIC_URL}/${fileName}`;
 
-      try {
-        // Upload to R2
-        const command = new PutObjectCommand({
-          Bucket: process.env.VITE_R2_BUCKET_NAME,
-          Key: fileName,
-          Body: buffer,
-          ContentType: contentType,
-        });
-
-        await s3Client.send(command);
-
-        // Return public URL
-        const publicUrl = `${process.env.VITE_R2_PUBLIC_URL}/${fileName}`;
-
-        response.status(200).json({
-          success: true,
-          url: publicUrl,
-          fileName: fileName,
-        });
-      } catch (uploadError) {
-        console.error('R2 upload error:', uploadError);
-        response.status(500).json({ 
-          error: 'Upload failed',
-          message: uploadError.message || 'Unknown error'
-        });
-      }
+    response.status(200).json({
+      success: true,
+      url: publicUrl,
+      fileName: fileName,
     });
   } catch (error) {
     console.error('R2 upload error:', error);
@@ -85,10 +78,4 @@ module.exports = async function handler(request, response) {
     });
   }
 };
-
-module.exports.config = {
-  api: {
-    bodyParser: false,
-    sizeLimit: '500mb',
-  },
-};
+;

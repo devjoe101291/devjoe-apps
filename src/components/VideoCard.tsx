@@ -86,17 +86,13 @@ export const VideoCard = ({
         <DialogContent className="max-w-5xl p-0 bg-black border-0">
           <div className="relative aspect-video">
             <ReactPlayer
-              url={videoUrl}
+              src={videoUrl}
               playing={isPlaying}
-              controls
+              controls={true}
               width="100%"
               height="100%"
-              config={{
-                file: {
-                  attributes: {
-                    controlsList: 'nodownload',
-                  }
-                }
+              onError={(error) => {
+                console.error('Video player error:', error);
               }}
             />
           </div>

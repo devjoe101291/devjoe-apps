@@ -52,18 +52,18 @@ const Index = () => {
 
   const fetchVideos = async () => {
     const { data } = await supabase
-      .from("videos" as any)
+      .from("videos")
       .select("*")
       .order("created_at", { ascending: false });
 
-    setVideos((data as any) || []);
+    setVideos((data as Video[]) || []);
   };
 
   const handleVideoView = async (videoId: string) => {
     const video = videos.find(v => v.id === videoId);
     if (video) {
       await supabase
-        .from('videos' as any)
+        .from('videos')
         .update({ view_count: (video.view_count || 0) + 1 })
         .eq('id', videoId);
       fetchVideos();
