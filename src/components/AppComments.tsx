@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { MessageCircle, Send, User } from "lucide-react";
+import { MessageCircle, Send, User, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Comment {
@@ -17,6 +17,7 @@ interface Comment {
 interface AppCommentsProps {
   appId: string;
   appName: string;
+  isAdmin?: boolean;
 }
 
 // Generate anonymous username like "Anonymous1234"
@@ -35,11 +36,12 @@ const getAnonymousId = () => {
   return anonymousId;
 };
 
-export const AppComments = ({ appId, appName }: AppCommentsProps) => {
+export const AppComments = ({ appId, appName, isAdmin = false }: AppCommentsProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [showComments, setShowComments] = useState(false);
   const { toast } = useToast();
 
@@ -53,13 +55,13 @@ export const AppComments = ({ appId, appName }: AppCommentsProps) => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('app_comments')
+        .from('app_comments' as any)
         .select('*')
         .eq('app_id', appId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setComments(data || []);
+      setComments((data as any) || []);
     } catch (error) {
       console.error('Error fetching comments:', error);
     } finally {
@@ -82,7 +84,7 @@ export const AppComments = ({ appId, appName }: AppCommentsProps) => {
       const anonymousName = getAnonymousId();
       
       const { error } = await supabase
-        .from('app_comments')
+        .from('app_comments' as any)
         .insert({
           app_id: appId,
           anonymous_name: anonymousName,
@@ -107,6 +109,36 @@ export const AppComments = ({ appId, appName }: AppCommentsProps) => {
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!isAdmin) return;
+
+    setDeleting(commentId);
+    try {
+      const { error } = await supabase
+        .from('app_comments' as any)
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Comment deleted",
+        description: "The comment has been removed.",
+      });
+
+      fetchComments();
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete comment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -198,9 +230,22 @@ export const AppComments = ({ appId, appName }: AppCommentsProps) => {
                           <span className="text-sm font-medium text-primary">
                             {comment.anonymous_name}
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDate(comment.created_at)}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(comment.created_at)}
+                            </span>
+                            {isAdmin && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteComment(comment.id)}
+                                disabled={deleting === comment.id}
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                         <p className="text-sm text-foreground/90 break-words">
                           {comment.comment_text}

@@ -12,6 +12,7 @@ interface AppCardProps {
   iconUrl?: string;
   onDownload?: () => void;
   download_count?: number;
+  isAdmin?: boolean;
 }
 
 const platformConfig = {
@@ -20,7 +21,7 @@ const platformConfig = {
   web: { icon: Globe, label: "Web", color: "bg-primary/10 text-primary border-primary/20" },
 };
 
-export const AppCard = ({ id, name, description, platform, iconUrl, onDownload, download_count }: AppCardProps) => {
+export const AppCard = ({ id, name, description, platform, iconUrl, onDownload, download_count, isAdmin = false }: AppCardProps) => {
   const config = platformConfig[platform];
   const Icon = config.icon;
 
@@ -69,7 +70,7 @@ export const AppCard = ({ id, name, description, platform, iconUrl, onDownload, 
         </div>
 
         {/* Comments Section */}
-        <AppComments appId={id} appName={name} />
+        <AppComments appId={id} appName={name} isAdmin={isAdmin} />
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
