@@ -6,16 +6,20 @@ interface VideoCardProps {
 }
 
 export const VideoCard = ({ title, description, videoUrl, thumbnailUrl }: VideoCardProps) => {
-  // Detect video type
-  const ytMatch = videoUrl.match(/(?:youtube.com\/(?:embed\/|watch\?v=)|youtu.be\/)([\/w-]+)/);
-  const vimeoMatch = videoUrl.match(/(?:vimeo.com\/(\d+))/);
+  // Detect video type with improved regex patterns
+  const ytMatch = videoUrl.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([\w-]+)/);
+  const vimeoMatch = videoUrl.match(/(?:vimeo\.com\/)(?:video\/)?(\d+)/);
+  
+  console.log('VideoCard - URL:', videoUrl);
+  console.log('VideoCard - YouTube match:', ytMatch);
+  console.log('VideoCard - Vimeo match:', vimeoMatch);
   
   return (
     <div className="group relative bg-gradient-to-br from-card to-card/50 border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_30px_hsl(193_95%_55%_/_0.2)] rounded-lg overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
       <div className="relative aspect-video overflow-hidden bg-black">
-        {ytMatch ? (
+        {ytMatch && ytMatch[1] ? (
           // YouTube Embed
           <iframe
             src={`https://www.youtube.com/embed/${ytMatch[1]}`}
