@@ -298,11 +298,28 @@ const abortMultipartUpload = async (
  */
 export const isR2Configured = (): boolean => {
   // @ts-ignore - import.meta.env is available in Vite
+  const config = {
+    endpoint: import.meta.env.VITE_R2_ENDPOINT,
+    accessKeyId: import.meta.env.VITE_R2_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_R2_SECRET_ACCESS_KEY,
+    bucketName: import.meta.env.VITE_R2_BUCKET_NAME,
+    publicUrl: import.meta.env.VITE_R2_PUBLIC_URL,
+  };
+  
+  console.log('R2 Environment Variables Check:', {
+    hasEndpoint: !!config.endpoint,
+    hasAccessKeyId: !!config.accessKeyId,
+    hasSecretAccessKey: !!config.secretAccessKey,
+    hasBucketName: !!config.bucketName,
+    hasPublicUrl: !!config.publicUrl,
+    endpoint: config.endpoint ? `${config.endpoint.substring(0, 30)}...` : 'MISSING',
+  });
+  
   return !!(
-    import.meta.env.VITE_R2_ACCESS_KEY_ID &&
-    import.meta.env.VITE_R2_SECRET_ACCESS_KEY &&
-    import.meta.env.VITE_R2_ENDPOINT &&
-    import.meta.env.VITE_R2_BUCKET_NAME &&
-    import.meta.env.VITE_R2_PUBLIC_URL
+    config.endpoint &&
+    config.accessKeyId &&
+    config.secretAccessKey &&
+    config.bucketName &&
+    config.publicUrl
   );
 };
