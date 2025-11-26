@@ -32,8 +32,24 @@ export const uploadToR2 = async (
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Upload failed: ${response.status} ${response.statusText}. ${errorData.message || ''}`);
+      const text = await response.text();
+      let errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
+      
+      try {
+        const errorData = JSON.parse(text);
+        if (errorData.message) {
+          errorMessage += `. ${errorData.message}`;
+        }
+      } catch {
+        // Response wasn't JSON, likely an HTML error page
+        if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+          errorMessage += '. R2 configuration error - please ensure R2 environment variables are set in your deployment settings.';
+        } else {
+          errorMessage += `. ${text.substring(0, 100)}`;
+        }
+      }
+      
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
