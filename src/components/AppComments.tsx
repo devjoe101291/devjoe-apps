@@ -46,10 +46,15 @@ export const AppComments = ({ appId, appName, isAdmin = false }: AppCommentsProp
   const { toast } = useToast();
 
   useEffect(() => {
+    // Always fetch count for button display
+    fetchComments();
+  }, [appId]);
+
+  useEffect(() => {
     if (showComments) {
       fetchComments();
     }
-  }, [appId, showComments]);
+  }, [showComments]);
 
   const fetchComments = async () => {
     setLoading(true);
