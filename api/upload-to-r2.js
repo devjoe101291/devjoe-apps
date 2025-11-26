@@ -49,14 +49,38 @@ module.exports = async function handler(request, response) {
 
     console.log('Received file size:', buffer.length, 'bytes');
 
-    // Generate unique filename
+    // Generate unique filename based on content type
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(7);
     const contentType = request.headers['content-type'] || 'application/octet-stream';
-    const extension = contentType.includes('apk') ? 'apk' : 
-                     contentType.includes('exe') ? 'exe' :
-                     contentType.includes('zip') ? 'zip' : 'bin';
-    const fileName = `apps/${timestamp}_${random}.${extension}`;
+    
+    // Determine file type and folder
+    let extension = 'bin';
+    let folder = 'uploads';
+    
+    if (contentType.includes('video/mp4')) {
+      extension = 'mp4';
+      folder = 'videos/uploads';
+    } else if (contentType.includes('video/webm')) {
+      extension = 'webm';
+      folder = 'videos/uploads';
+    } else if (contentType.includes('video/quicktime')) {
+      extension = 'mov';
+      folder = 'videos/uploads';
+    } else if (contentType.includes('apk') || contentType.includes('android')) {
+      extension = 'apk';
+      folder = 'apps';
+    } else if (contentType.includes('exe') || contentType.includes('x-msdownload')) {
+      extension = 'exe';
+      folder = 'apps';
+    } else if (contentType.includes('zip')) {
+      extension = 'zip';
+      folder = 'apps';
+    }
+    
+    const fileName = `${folder}/${timestamp}_${random}.${extension}`;
+    
+    console.log('File details:', { contentType, extension, folder, fileName });
 
     // Upload to R2
     const command = new PutObjectCommand({
