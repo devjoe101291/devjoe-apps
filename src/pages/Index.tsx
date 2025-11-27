@@ -16,6 +16,7 @@ interface App {
   platform: "android" | "windows" | "web";
   icon_url?: string;
   file_url?: string;
+  original_filename?: string;
   download_count?: number;
 }
 
@@ -95,25 +96,42 @@ const Index = () => {
     });
 
     try {
-      // Get file extension from URL
-      const urlParts = app.file_url.split('.');
-      const extension = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
+      // Use original filename if available, otherwise extract from URL
+      let filename: string;
       
-      // Create proper filename based on app name
-      const sanitizedName = app.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const filename = `${sanitizedName}.${extension}`;
+      if (app.original_filename) {
+        // Use the preserved original filename (e.g., "himigly.apk")
+        filename = app.original_filename;
+      } else {
+        // Fallback: Extract extension from URL and use app name
+        const urlParts = app.file_url.split('.');
+        const extension = urlParts[urlParts.length - 1].split('?')[0];
+        const sanitizedName = app.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        filename = `${sanitizedName}.${extension}`;
+      }
 
       // For external URLs (Supabase/R2), use direct download link
       if (app.file_url.startsWith('http')) {
+        // Fetch the file as blob for smooth download with original filename
+        const response = await fetch(app.file_url);
+        if (!response.ok) throw new Error('Failed to fetch file');
+        
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        
         // Create invisible link and trigger download
         const link = document.createElement('a');
-        link.href = app.file_url;
-        link.download = filename;
-        link.target = '_blank'; // Open in new tab for better compatibility
-        link.rel = 'noopener noreferrer';
+        link.href = blobUrl;
+        link.download = filename; // Use original filename
+        link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        
+        // Cleanup
+        setTimeout(() => {
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(blobUrl);
+        }, 100);
 
         // Increment download count after successful trigger
         await supabase

@@ -23,6 +23,7 @@ interface App {
   platform: "android" | "windows" | "web";
   icon_url?: string;
   file_url?: string;
+  original_filename?: string;
   download_count?: number;
 }
 
@@ -257,6 +258,7 @@ const Admin = () => {
         platform,
         icon_url: iconUrl,
         file_url: fileUrl,
+        original_filename: appFile ? appFile.name : null,
       });
 
       if (error) throw error;
@@ -362,6 +364,7 @@ const Admin = () => {
           platform: editPlatform,
           icon_url: iconUrl,
           file_url: fileUrl,
+          original_filename: editAppFile ? editAppFile.name : editingApp.original_filename,
         })
         .eq("id", editingApp.id);
 
