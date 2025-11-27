@@ -150,9 +150,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative min-h-[60vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[50vh] xs:min-h-[60vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background Image */}
         <div 
           className="absolute inset-0 z-0"
@@ -172,19 +172,19 @@ const Index = () => {
         
         {/* Content */}
         <div className="relative z-10 container mx-auto px-4 sm:px-6 text-center space-y-3 sm:space-y-8 py-8 sm:py-0">
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs sm:text-sm font-medium mb-1 sm:mb-4 animate-fade-in-down">
-            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] xs:text-xs sm:text-sm font-medium mb-1 sm:mb-4 animate-fade-in-down">
+            <Sparkles className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4" />
             <span className="hidden xs:inline">App Development Portfolio</span>
             <span className="xs:hidden">Portfolio</span>
           </div>
           
-          <h1 className="text-4xl xs:text-5xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight px-2 animate-scale-in" style={{ animationDelay: '0.2s' }}>
+          <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight px-2 sm:px-4 animate-scale-in" style={{ animationDelay: '0.2s' }}>
             <span className="bg-gradient-to-r from-foreground via-primary to-accent bg-clip-text text-transparent break-words">
               Dev Joe Solutions
             </span>
           </h1>
           
-          <p className="text-base xs:text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-3 sm:px-4 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
             Crafting innovative applications across Android, Windows, and Web platforms. 
             Explore my collection of projects and solutions.
           </p>
@@ -195,12 +195,12 @@ const Index = () => {
       </section>
 
       {/* Apps Showcase Section */}
-      <section className="py-12 sm:py-24 px-4 sm:px-6">
+      <section className="py-8 sm:py-12 md:py-16 lg:py-24 px-3 sm:px-4 md:px-6">
         <div className="container mx-auto">
           {/* Inspirational Quotes */}
-          <div className="max-w-4xl mx-auto mb-12 sm:mb-20 space-y-6 sm:space-y-8">
-            <blockquote className="relative border-l-4 border-primary pl-4 sm:pl-6 py-3 sm:py-4 bg-card/30 rounded-r-lg backdrop-blur animate-slide-in-left" style={{ animationDelay: '0.1s' }}>
-              <p className="text-base sm:text-lg md:text-xl text-muted-foreground italic leading-relaxed mb-2">
+          <div className="max-w-4xl mx-auto mb-8 sm:mb-12 md:mb-16 lg:mb-20 space-y-4 sm:space-y-6 md:space-y-8">
+            <blockquote className="relative border-l-2 sm:border-l-4 border-primary pl-3 sm:pl-4 md:pl-6 py-2 sm:py-3 md:py-4 bg-card/30 rounded-r-lg backdrop-blur animate-slide-in-left" style={{ animationDelay: '0.1s' }}>
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground italic leading-relaxed mb-1 sm:mb-2">
                 "God is most glorified in us when we are most satisfied in Him"
               </p>
               <footer className="text-sm sm:text-base text-primary font-medium">
@@ -208,8 +208,8 @@ const Index = () => {
               </footer>
             </blockquote>
 
-            <blockquote className="relative border-l-4 border-primary pl-4 sm:pl-6 py-3 sm:py-4 bg-card/30 rounded-r-lg backdrop-blur animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
-              <p className="text-base sm:text-lg md:text-xl text-muted-foreground italic leading-relaxed mb-2">
+            <blockquote className="relative border-l-2 sm:border-l-4 border-primary pl-3 sm:pl-4 md:pl-6 py-2 sm:py-3 md:py-4 bg-card/30 rounded-r-lg backdrop-blur animate-slide-in-left" style={{ animationDelay: '0.2s' }}>
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground italic leading-relaxed mb-1 sm:mb-2">
                 "If God is the Creator of the entire universe, then it must follow that He is the Lord of the whole universe. No part of the world is outside of His lordship. That means that no part of my life must be outside of His lordship."
               </p>
               <footer className="text-sm sm:text-base text-primary font-medium">
@@ -217,8 +217,8 @@ const Index = () => {
               </footer>
             </blockquote>
 
-            <blockquote className="relative border-l-4 border-primary pl-4 sm:pl-6 py-3 sm:py-4 bg-card/30 rounded-r-lg backdrop-blur animate-slide-in-left" style={{ animationDelay: '0.3s' }}>
-              <p className="text-base sm:text-lg md:text-xl text-muted-foreground italic leading-relaxed mb-2">
+            <blockquote className="relative border-l-2 sm:border-l-4 border-primary pl-3 sm:pl-4 md:pl-6 py-2 sm:py-3 md:py-4 bg-card/30 rounded-r-lg backdrop-blur animate-slide-in-left" style={{ animationDelay: '0.3s' }}>
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground italic leading-relaxed mb-1 sm:mb-2">
                 "We should ask God to increase our hope when it is small, awaken it when it is dormant, confirm it when it is wavering, strengthen it when it is weak, and raise it up when it is overthrown."
               </p>
               <footer className="text-sm sm:text-base text-primary font-medium">
@@ -227,13 +227,13 @@ const Index = () => {
             </blockquote>
           </div>
 
-          <div className="text-center space-y-2 sm:space-y-4 mb-8 sm:mb-16 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold px-2">
+          <div className="text-center space-y-1.5 sm:space-y-2 md:space-y-4 mb-6 sm:mb-8 md:mb-12 lg:mb-16 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold px-2 sm:px-4">
               <span className="bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
                 Featured Apps
               </span>
             </h2>
-            <p className="text-muted-foreground text-base sm:text-lg md:text-xl max-w-2xl mx-auto px-2">
+            <p className="text-muted-foreground text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mx-auto px-3 sm:px-4">
               A showcase of applications built with modern technologies and best practices
             </p>
           </div>
@@ -245,7 +245,7 @@ const Index = () => {
               No apps yet. Login to add your first app!
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" style={{ animationDelay: '0.2s' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6" style={{ animationDelay: '0.2s' }}>
               {apps.map((app, index) => (
                 <div key={app.id} className="animate-scale-in" style={{ animationDelay: `${0.1 + index * 0.1}s` }}>
                   <AppCard 
@@ -266,23 +266,23 @@ const Index = () => {
       </section>
 
       {/* YouTube Video Gallery Section */}
-      <section className="py-12 sm:py-24 px-4 sm:px-6 bg-secondary/20">
+      <section className="py-8 sm:py-12 md:py-16 lg:py-24 px-3 sm:px-4 md:px-6 bg-secondary/20">
         <div className="container mx-auto">
-          <div className="text-center space-y-2 sm:space-y-4 mb-8 sm:mb-16 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs sm:text-sm font-medium mb-2 sm:mb-4 mx-auto">
-              <Video className="w-3 h-3 sm:w-4 sm:h-4" />
+          <div className="text-center space-y-1.5 sm:space-y-2 md:space-y-4 mb-6 sm:mb-8 md:mb-12 lg:mb-16 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] xs:text-xs sm:text-sm font-medium mb-1 sm:mb-2 md:mb-4 mx-auto">
+              <Video className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4" />
               <span>Inspirational Content</span>
             </div>
-            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold px-2">
+            <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold px-2 sm:px-4">
               <span className="bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
                 Video Gallery
               </span>
             </h2>
-            <p className="text-muted-foreground text-base sm:text-lg md:text-xl max-w-2xl mx-auto px-2">
+            <p className="text-muted-foreground text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mx-auto px-3 sm:px-4">
               Uplifting messages and teachings to strengthen your faith
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {loadingVideos ? (
               <div className="text-center text-muted-foreground col-span-full">Loading videos...</div>
             ) : videos.length === 0 ? (
@@ -302,9 +302,9 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-6 sm:py-8 px-4 sm:px-6 mt-12 sm:mt-24">
+      <footer className="border-t border-border/50 py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-6 mt-8 sm:mt-12 md:mt-16 lg:mt-24">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p className="text-xs sm:text-sm">© 2025 Dev Joe Solutions. All rights reserved.</p>
+          <p className="text-[10px] xs:text-xs sm:text-sm">© 2025 Dev Joe Solutions. All rights reserved.</p>
         </div>
       </footer>
     </div>

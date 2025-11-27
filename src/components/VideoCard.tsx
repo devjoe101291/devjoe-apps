@@ -56,8 +56,8 @@ export const VideoCard = ({ title, description, videoUrl, thumbnailUrl }: VideoC
         )}
       </div>
 
-      <div className="relative p-4 sm:p-6 space-y-2">
-        <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+      <div className="relative p-3 sm:p-4 md:p-6 space-y-1.5 sm:space-y-2">
+        <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
           {title}
         </h3>
         <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed line-clamp-2">

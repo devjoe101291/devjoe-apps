@@ -591,30 +591,30 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 space-y-8 sm:space-y-12">
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-border/50">
+        <div className="flex gap-1 sm:gap-2 border-b border-border/50 overflow-x-auto pb-1">
           <Button
             variant={activeTab === "apps" ? "default" : "ghost"}
             onClick={() => setActiveTab("apps")}
-            className="gap-2"
+            className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4 flex-shrink-0"
           >
-            <Upload className="w-4 h-4" />
-            Apps
+            <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Apps</span>
           </Button>
           <Button
             variant={activeTab === "videos" ? "default" : "ghost"}
             onClick={() => setActiveTab("videos")}
-            className="gap-2"
+            className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4 flex-shrink-0"
           >
-            <Video className="w-4 h-4" />
-            Videos
+            <Video className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Videos</span>
           </Button>
           <Button
             variant={activeTab === "visitors" ? "default" : "ghost"}
             onClick={() => setActiveTab("visitors")}
-            className="gap-2"
+            className="gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4 flex-shrink-0"
           >
-            <Home className="w-4 h-4" />
-            Visitors
+            <Home className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Visitors</span>
           </Button>
         </div>
 
@@ -624,10 +624,10 @@ const Admin = () => {
         {/* Apps Section */}
         {activeTab === "apps" && (
           <>
-            <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-br from-card to-card/50 border-border/50">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Add New App</h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-br from-card to-card/50 border-border/50">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 md:mb-6">Add New App</h2>
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-2">
                 <Label htmlFor="name">App Name</Label>
                 <Input
