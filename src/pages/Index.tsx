@@ -78,22 +78,23 @@ const Index = () => {
   };
 
   const handleDownload = async (app: App) => {
+    // Validate file URL exists
     if (!app.file_url) {
       toast({
-        title: "Download unavailable",
-        description: "This app doesn't have a download file.",
+        title: "❌ Download Unavailable",
+        description: "This app doesn't have a download file yet.",
         variant: "destructive",
       });
       return;
     }
 
-    try {
-      // Increment download count
-      await supabase
-        .from('apps')
-        .update({ download_count: (app.download_count || 0) + 1 })
-        .eq('id', app.id);
+    // Show loading toast
+    toast({
+      title: "⏳ Preparing Download...",
+      description: `Getting ${app.name} ready for you...`,
+    });
 
+    try {
       // Get file extension from URL
       const urlParts = app.file_url.split('.');
       const extension = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
@@ -102,29 +103,47 @@ const Index = () => {
       const sanitizedName = app.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const filename = `${sanitizedName}.${extension}`;
 
-      // Fetch the file and trigger download with proper name
-      const response = await fetch(app.file_url);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Download started",
-        description: `${app.name} is being downloaded as ${filename}.`,
-      });
+      // For external URLs (Supabase/R2), use direct download link
+      if (app.file_url.startsWith('http')) {
+        // Create invisible link and trigger download
+        const link = document.createElement('a');
+        link.href = app.file_url;
+        link.download = filename;
+        link.target = '_blank'; // Open in new tab for better compatibility
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-      // Refresh apps to show updated download count
-      fetchApps();
-    } catch (error) {
+        // Increment download count after successful trigger
+        await supabase
+          .from('apps')
+          .update({ download_count: (app.download_count || 0) + 1 })
+          .eq('id', app.id);
+
+        toast({
+          title: "✅ Download Started!",
+          description: `${app.name} is downloading as ${filename}. Check your downloads folder.`,
+        });
+
+        // Refresh apps to show updated download count
+        fetchApps();
+      } else {
+        throw new Error('Invalid file URL');
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      
+      // User-friendly error messages
+      const errorMessage = error?.message?.includes('Failed to fetch') 
+        ? 'Network error. Please check your connection and try again.'
+        : error?.message?.includes('CORS')
+        ? 'File access blocked. Please contact the administrator.'
+        : 'Unable to download the file. Please try again or contact support.';
+
       toast({
-        title: "Download failed",
-        description: "There was an error downloading the file.",
+        title: "❌ Download Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     }
